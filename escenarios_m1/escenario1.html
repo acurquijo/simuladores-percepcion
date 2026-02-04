@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Simulador – Tres luces</title>
+
+<style>
+  body {
+    background: #f2f2f2;
+    font-family: Arial, sans-serif;
+    text-align: center;
+  }
+
+  .container {
+    margin-top: 60px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+  }
+
+  .circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: #bbb;
+    opacity: 0.3;
+    transition: opacity 0.2s;
+  }
+
+  .on {
+    opacity: 1;
+  }
+
+  .red {
+    background: red;
+    opacity: 1;
+  }
+</style>
+</head>
+
+<body>
+
+<h2>Escenario</h2>
+<!--
+<p>La respuesta ocurre cuando aparece la tercera luz.</p>
+-->
+
+<div class="container">
+  <div id="c1" class="circle"></div>
+  <div id="c2" class="circle"></div>
+  <div id="c3" class="circle"></div>
+</div>
+<div class="container">
+    <div id="c4" class="circle" style="display:none;"></div>
+</div>
+
+<script>
+const c1 = document.getElementById("c1");
+const c2 = document.getElementById("c2");
+const c3 = document.getElementById("c3");
+const c4 = document.getElementById("c4");
+
+const interval = 800; // ms entre luces
+const responseDuration = 1000;
+
+function reset() {
+  [c1, c2, c3].forEach(c => c.classList.remove("on"));
+  c4.style.display = "none";
+  c4.classList.remove("red");
+}
+
+function sequence() {
+  reset();
+
+  setTimeout(() => {
+    c1.classList.add("on");
+  }, interval);
+
+  setTimeout(() => {
+    c1.classList.remove("on");
+    c2.classList.add("on");
+  }, interval * 2);
+
+  setTimeout(() => {
+    c2.classList.remove("on");
+    c3.classList.add("on");
+
+    // Estímulo adicional (respuesta)
+    c4.style.display = "block";
+    c4.classList.add("red");
+
+    setTimeout(() => {
+      c4.style.display = "none";
+      c3.classList.remove("on");
+    }, responseDuration);
+
+  }, interval * 3);
+}
+
+// Repetición constante
+setInterval(sequence, interval * 5);
+
+// Inicio
+sequence();
+</script>
+
+</body>
+</html>
