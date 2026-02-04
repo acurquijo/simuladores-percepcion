@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Ilusión perceptiva – Estrella</title>
+
+<style>
+  body {
+    background: #f4f4f4;
+    font-family: Arial, sans-serif;
+    text-align: center;
+  }
+
+  canvas {
+    display: block;
+    margin: 20px auto;
+    background: white;
+  }
+
+  .controls {
+    width: 600px;
+    margin: auto;
+    text-align: left;
+  }
+
+  label {
+    display: block;
+    margin-top: 10px;
+    font-size: 14px;
+  }
+</style>
+</head>
+
+<body>
+
+<h2>Ilusión perceptiva – Estrellas concéntricas</h2>
+
+<canvas id="canvas" width="600" height="600"></canvas>
+
+<div class="controls">
+  <label>
+    Picos de la estrella:
+    <input type="range" id="spikes" min="4" max="30" value="12">
+  </label>
+
+  <label>
+    Saturación de colores:
+    <input type="range" id="saturation" min="0" max="100" value="90">
+  </label>
+
+  <label>
+    Color modificable A:
+    <input type="color" id="colorA" value="#ff0080">
+  </label>
+
+  <label>
+    Color modificable B:
+    <input type="color" id="colorB" value="#ffd400">
+  </label>
+</div>
+
+<script>
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+const cx = canvas.width / 2;
+const cy = canvas.height / 2;
+
+// Controles
+const spikesSlider = document.getElementById("spikes");
+const saturationSlider = document.getElementById("saturation");
+const colorASlider = document.getElementById("colorA");
+const colorBSlider = document.getElementById("colorB");
+
+function hexToHSL(hex) {
+  let r = parseInt(hex.substring(1,3),16)/255;
+  let g = parseInt(hex.substring(3,5),16)/255;
+  let b = parseInt(hex.substring(5,7),16)/255;
+
+  let max = Math.max(r,g,b), min = Math.min(r,g,b);
+  let h, s, l = (max + min) / 2;
+
+  if(max === min){
+    h = s = 0;
+  } else {
+    let d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch(max){
+      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+      case g: h = (b - r) / d + 2; break;
+      case b: h = (r - g) / d + 4; break;
+    }
+    h /= 6;
+  }
+
+  return {
+    h: Math.round(h * 360),
+    l: Math.round(l * 100)
+  };
+}
+
+function drawStar(cx, cy, outerR, innerR, spikes, color) {
+  let rot = Math.PI / 2 * 3;
+  let step = Math.PI / spikes;
+
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - outerR);
+
+  for (let i = 0; i < spikes; i++) {
+    ctx.lineTo(
+      cx + Math.cos(rot) * outerR,
+      cy + Math.sin(rot) * outerR
+    );
+    rot += step;
+
+    ctx.lineTo(
+      cx + Math.cos(rot) * innerR,
+      cy + Math.sin(rot) * innerR
+    );
+    rot += step;
+  }
+
+  ctx.closePath();
+  ctx.fillStyle = color;
+  ctx.fill();
+}
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const spikes = parseInt(spikesSlider.value);
+  const sat = saturationSlider.value;
+
+  const colorA = hexToHSL(colorASlider.value);
+  const colorB = hexToHSL(colorBSlider.value);
+
+  const maxRadius = 260;
+  let radius = maxRadius;
+
+  // Grosor base
+  const thin = 12;
+  const thick = 24;
+
+  while (radius > 10) {
+    // Negro
+    drawStar(cx, cy, radius, radius * 0.75, spikes, "#000000");
+    radius -= thin;
+
+    // Color A
+    drawStar(
+      cx, cy, radius, radius * 0.75, spikes,
+      `hsl(${colorA.h}, ${sat}%, ${colorA.l}%)`
+    );
+    radius -= thick;
+
+    // Blanco
+    drawStar(cx, cy, radius, radius * 0.75, spikes, "#ffffff");
+    radius -= thin;
+
+    // Color B
+    drawStar(
+      cx, cy, radius, radius * 0.75, spikes,
+      `hsl(${colorB.h}, ${sat}%, ${colorB.l}%)`
+    );
+    radius -= thick;
+  }
+}
+
+// Eventos
+spikesSlider.oninput = draw;
+saturationSlider.oninput = draw;
+colorASlider.oninput = draw;
+colorBSlider.oninput = draw;
+
+draw();
+</script>
+
+</body>
+</html>
