@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Coincidencia simultánea</title>
+
+<style>
+  body {
+    background: #f2f2f2;
+    font-family: Arial, sans-serif;
+    text-align: center;
+  }
+
+  .stage {
+    width: 600px;
+    height: 250px;
+    margin: 60px auto;
+    background: white;
+    position: relative;
+  }
+
+  .stimulus {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: red;
+    position: absolute;
+    top: 100px;
+    opacity: 0.2;
+    transition: opacity 0.1s;
+  }
+
+  #stimA { left: 150px; }
+  #stimB { right: 150px; }
+
+  .active {
+    opacity: 1;
+  }
+
+  .organism {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #888;
+    position: absolute;
+    top: 95px;
+    left: 275px;
+    opacity: 0;
+    transition: opacity 0.1s;
+  }
+
+  .respond {
+    opacity: 1;
+  }
+</style>
+</head>
+
+<body>
+
+<h2>Escenario</h2>
+<!--
+<p>El organismo actúa solo cuando dos eventos ocurren simultáneamente.</p>
+-->
+
+<div class="stage">
+  <div id="stimA" class="stimulus"></div>
+  <div id="stimB" class="stimulus"></div>
+  <div id="organism" class="organism"></div>
+</div>
+
+<script>
+const stimA = document.getElementById("stimA");
+const stimB = document.getElementById("stimB");
+const organism = document.getElementById("organism");
+
+let stateA = false;
+let stateB = false;
+
+function randomToggle(stim, setState) {
+  // DURACIÓN del estímulo encendido (ms)
+const STIM_ON_MIN = 400;
+const STIM_ON_MAX = 800;
+
+// INTERVALO entre estímulos (ms)
+const STIM_OFF_MIN = 300;
+const STIM_OFF_MAX = 900;
+
+  const onDuration =
+    Math.random() * (STIM_ON_MAX - STIM_ON_MIN) + STIM_ON_MIN;
+
+  const offDuration =
+    Math.random() * (STIM_OFF_MAX - STIM_OFF_MIN) + STIM_OFF_MIN;
+
+  stim.classList.add("active");
+  setState(true);
+
+  setTimeout(() => {
+    stim.classList.remove("active");
+    setState(false);
+  }, onDuration);
+
+  setTimeout(() => {
+    randomToggle(stim, setState);
+  }, onDuration + offDuration);
+}
+
+
+function checkCoincidence() {
+  if (stateA && stateB) {
+    organism.classList.add("respond");
+  } else {
+    organism.classList.remove("respond");
+  }
+  requestAnimationFrame(checkCoincidence);
+}
+
+// Iniciar estímulos independientes
+randomToggle(stimA, (v) => stateA = v);
+randomToggle(stimB, (v) => stateB = v);
+
+// Monitoreo continuo
+checkCoincidence();
+</script>
+
+</body>
+</html>
