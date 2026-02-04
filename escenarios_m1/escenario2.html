@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Estimulación pasiva – Contactos secuenciales</title>
+
+<style>
+  body {
+    background: #f2f2f2;
+    font-family: Arial, sans-serif;
+    text-align: center;
+  }
+
+  svg {
+    display: block;
+    margin: 40px auto;
+    background: white;
+  }
+
+  .stimulus {
+    opacity: 0;
+  }
+</style>
+</head>
+
+<body>
+
+<h2>Escenario</h2>
+<!--
+<p>Un contacto fijo seguido de un segundo contacto tras un intervalo constante.</p>
+-->
+
+<svg width="600" height="400">
+
+  <!-- Círculo central (organismo) -->
+  <circle cx="300" cy="200" r="60" fill="#dddddd" />
+
+  <!-- Estímulo 1 -->
+  <circle id="stim1" cx="100" cy="200" r="15" fill="#4a90e2" class="stimulus" />
+
+  <!-- Estímulo 2 -->
+  <circle id="stim2" cx="300" cy="50" r="15" fill="#e94e4e" class="stimulus" />
+
+</svg>
+
+<script>
+const stim1 = document.getElementById("stim1");
+const stim2 = document.getElementById("stim2");
+
+const centerX = 300;
+const centerY = 200;
+
+// Tiempos (ms)
+const approachTime = 600;
+const pauseBetween = 600;
+const cycleTime = 2500;
+
+function animateStimulus(stim, startX, startY) {
+  stim.style.transition = "none";
+  stim.setAttribute("cx", startX);
+  stim.setAttribute("cy", startY);
+  stim.style.opacity = 1;
+
+  requestAnimationFrame(() => {
+    stim.style.transition = `cx ${approachTime}ms linear, cy ${approachTime}ms linear`;
+    stim.setAttribute("cx", centerX);
+    stim.setAttribute("cy", centerY);
+  });
+
+  setTimeout(() => {
+    stim.style.opacity = 0;
+  }, approachTime + 100);
+}
+
+function sequence() {
+  // Primer contacto (siempre igual)
+  animateStimulus(stim1, 100, 200);
+
+  // Segundo contacto tras intervalo fijo
+  setTimeout(() => {
+    animateStimulus(stim2, 300, 50);
+  }, approachTime + pauseBetween);
+}
+
+// Loop constante
+sequence();
+setInterval(sequence, cycleTime);
+</script>
+
+</body>
+</html>

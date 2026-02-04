@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Movimiento aparente</title>
+
+<style>
+  body {
+    background: #f2f2f2;
+    font-family: Arial, sans-serif;
+    text-align: center;
+  }
+
+  .stage {
+    width: 600px;
+    height: 200px;
+    margin: 60px auto;
+    background: white;
+    position: relative;
+  }
+
+  .stimulus {
+    width: 30px;
+    height: 30px;
+    background: #333;
+    border-radius: 50%;
+    position: absolute;
+    top: 85px;
+    opacity: 0;
+  }
+
+  .left {
+    left: 180px;
+  }
+
+  .right {
+    left: 390px;
+  }
+</style>
+</head>
+
+<body>
+
+<h2>Escenario</h2>
+<!--
+<p>Dos posiciones, un estímulo perceptivo.</p>
+-->
+
+<div class="stage">
+  <div id="stimulus" class="stimulus left"></div>
+</div>
+
+<script>
+const stim = document.getElementById("stimulus");
+
+const onTime = 150;    // duración visible
+const offTime = 80;   // pausa entre apariciones
+const cycleTime = (onTime + offTime) * 2;
+
+function sequence() {
+  // Posición A
+  stim.className = "stimulus left";
+  stim.style.opacity = 1;
+
+  setTimeout(() => {
+    stim.style.opacity = 0;
+  }, onTime);
+
+  // Posición B
+  setTimeout(() => {
+    stim.className = "stimulus right";
+    stim.style.opacity = 1;
+  }, onTime + offTime);
+
+  setTimeout(() => {
+    stim.style.opacity = 0;
+  }, onTime * 2 + offTime);
+}
+
+sequence();
+setInterval(sequence, cycleTime);
+</script>
+
+</body>
+</html>
