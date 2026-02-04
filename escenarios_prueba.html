@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Pausa con sonido y respuesta</title>
+<style>
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: Arial, sans-serif;
+  }
+  #escena {
+    width: 400px;
+    height: 150px;
+    border: 1px solid #ccc;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+    position: relative;
+  }
+  .sonido {
+    width: 30px;
+    height: 30px;
+    background: #4a90e2;
+    border-radius: 50%;
+    opacity: 0;
+  }
+  .respuesta {
+    position: absolute;
+    bottom: 10px;
+    width: 20px;
+    height: 20px;
+    background: #e74c3c;
+    border-radius: 50%;
+    opacity: 0;
+  }
+</style>
+</head>
+<body>
+
+<h3>Sonido repetido / Respuesta al alargarse la pausa</h3>
+
+<div id="escena">
+  <div class="sonido" id="sonido"></div>
+  <div class="respuesta" id="respuesta"></div>
+</div>
+
+<!-- Sonido breve -->
+<audio id="audioBeat" src="bell.mp3" preload="auto"></audio>
+
+<script>
+const sonido = document.getElementById("sonido");
+const respuesta = document.getElementById("respuesta");
+const audioBeat = document.getElementById("audioBeat");
+
+let ciclo = 0;
+const pausaNormal = 600;
+const pausaLarga = 1200;
+
+function emitirPulso() {
+  // Visual
+  sonido.style.opacity = 1;
+  setTimeout(() => sonido.style.opacity = 0, 150);
+
+  // Sonido
+  audioBeat.currentTime = 0;
+  audioBeat.play();
+
+  // Cada 5 ciclos, hacemos pausa larga
+  const pausa = (ciclo === 4) ? pausaLarga : pausaNormal;
+
+  if (pausa > pausaNormal) {
+    // Mostrar respuesta visual solo si pausa larga
+    respuesta.style.opacity = 1;
+    setTimeout(() => respuesta.style.opacity = 0, 300);
+  }
+
+  ciclo = (ciclo + 1) % 5;
+  setTimeout(emitirPulso, pausa);
+}
+
+emitirPulso();
+</script>
+
+</body>
+</html>
