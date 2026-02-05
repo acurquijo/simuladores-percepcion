@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Movimiento aparente entre dos puntos</title>
+
+<style>
+  body {
+    font-family: sans-serif;
+    background: #f4f4f4;
+    display: flex;
+    justify-content: center;
+    padding-top: 40px;
+  }
+
+  .container {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    width: 500px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+  }
+
+  .scene {
+    position: relative;
+    width: 460px;
+    height: 160px;
+    margin-bottom: 20px;
+    border: 1px solid #ddd;
+    background: #fafafa;
+  }
+
+  .dot {
+    position: absolute;
+    top: 73px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: black;
+    display: none;
+  }
+
+  label {
+    font-size: 14px;
+    display: block;
+    margin-top: 12px;
+  }
+
+  input[type="range"] {
+    width: 100%;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <div class="scene">
+    <div class="dot" id="dotA"></div>
+    <div class="dot" id="dotB"></div>
+  </div>
+
+  <label>
+    Δt – intervalo entre A y B (ms)
+    <input type="range" min="30" max="500" value="150" id="dtSlider">
+  </label>
+
+  <label>
+    Δx – distancia entre puntos (px)
+    <input type="range" min="20" max="220" value="80" id="dxSlider">
+  </label>
+</div>
+
+<script>
+  const dotA = document.getElementById("dotA");
+  const dotB = document.getElementById("dotB");
+  const dtSlider = document.getElementById("dtSlider");
+  const dxSlider = document.getElementById("dxSlider");
+
+  function positionDots() {
+    const dx = parseInt(dxSlider.value);
+    const center = 230;
+
+    dotA.style.left = (center - dx / 2) + "px";
+    dotB.style.left = (center + dx / 2) + "px";
+  }
+
+  function loop() {
+    positionDots();
+
+    dotA.style.display = "block";
+    dotB.style.display = "none";
+
+    setTimeout(() => {
+      dotA.style.display = "none";
+      dotB.style.display = "block";
+    }, dtSlider.value);
+
+    setTimeout(() => {
+      dotB.style.display = "none";
+    }, dtSlider.value * 2);
+
+    setTimeout(loop, dtSlider.value * 3);
+  }
+
+  loop();
+</script>
+
+</body>
+</html>
