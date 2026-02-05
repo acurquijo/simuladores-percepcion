@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<title>Simulador mano y perro</title>
+
+<style>
+  body {
+    font-family: sans-serif;
+    background: #f4f4f4;
+    display: flex;
+    justify-content: center;
+    padding-top: 40px;
+  }
+
+  .scene {
+    position: relative;
+    width: 520px;
+    height: 360px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    overflow: hidden;
+  }
+
+  /* PERRO */
+  .dog {
+    position: absolute;
+    bottom: 20px;
+    left: 120px;            /* alineación fija */
+    height: 260px;
+    width: auto;
+  }
+
+  /* MANO */
+  .hand {
+    position: absolute;
+    top: 20px;
+    right: -220px;
+    width: 180px;
+    transition: right 0.8s linear;
+    pointer-events: none;
+  }
+
+  /* CONTROLES */
+  .controls {
+    margin-top: 20px;
+    background: white;
+    padding: 14px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    width: 520px;
+  }
+
+  button {
+    padding: 8px 14px;
+    margin-right: 8px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    background: #e0e0e0;
+  }
+
+  button.active {
+    background: #ffcc66;
+    box-shadow: inset 0 0 0 2px #cc9900;
+  }
+
+  label {
+    font-size: 14px;
+    display: block;
+    margin-top: 12px;
+  }
+
+  input[type="range"] {
+    width: 100%;
+  }
+</style>
+</head>
+
+<body>
+
+<div>
+  <div class="scene">
+    <img src="dog1.png" id="dog" class="dog">
+    <img src="hand.png" id="hand" class="hand">
+  </div>
+
+  <div class="controls">
+    <div>
+      <button id="btnYes" onclick="setDog(true)">🐾 El perro da la pata</button>
+      <button id="btnNo" onclick="setDog(false)">🚫 El perro no da la pata</button>
+    </div>
+
+    <label>
+      Cercanía de la mano
+      <input type="range" min="0" max="100" value="0" id="handSlider">
+    </label>
+  </div>
+</div>
+
+<script>
+  const dog = document.getElementById("dog");
+  const hand = document.getElementById("hand");
+  const slider = document.getElementById("handSlider");
+  const btnYes = document.getElementById("btnYes");
+  const btnNo = document.getElementById("btnNo");
+
+  let dogAllowsTouch = false;
+
+  function setDog(givesPaw) {
+    dogAllowsTouch = givesPaw;
+
+    btnYes.classList.toggle("active", givesPaw);
+    btnNo.classList.toggle("active", !givesPaw);
+
+    if (!givesPaw) {
+      dog.src = "dog1.png";
+      hand.style.right = "-220px";
+      slider.value = 0;
+    }
+  }
+
+  slider.addEventListener("input", () => {
+    if (!dogAllowsTouch) return;
+
+    const value = slider.value;
+
+    const minRight = -220;
+    const maxRight = 180;
+
+    const pos =
+      minRight + (value / 100) * (maxRight - minRight);
+
+    hand.style.right = pos + "px";
+
+    // contacto más tardío (+5%)
+    if (value > 90) {
+      dog.src = "dog2.png";
+    } else {
+      dog.src = "dog1.png";
+    }
+  });
+</script>
+
+</body>
+</html>
