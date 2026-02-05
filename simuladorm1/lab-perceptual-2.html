@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Ritmo y sincronía sonora</title>
+
+<style>
+  body {
+    font-family: sans-serif;
+    background: #f3f3f3;
+    display: flex;
+    justify-content: center;
+    padding-top: 40px;
+  }
+
+  .container {
+    background: white;
+    padding: 20px 24px;
+    border-radius: 12px;
+    width: 420px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+  }
+
+  label {
+    font-size: 14px;
+    margin-top: 16px;
+    display: block;
+  }
+
+  input[type="range"] {
+    width: 100%;
+  }
+
+  button {
+    margin-top: 20px;
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    background: #333;
+    color: white;
+    font-size: 15px;
+    cursor: pointer;
+  }
+
+  button.active {
+    background: #4CAF50;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <label>
+    Δt – Velocidad del ritmo (ms)
+    <input type="range" min="300" max="2000" value="1000" id="intervalSlider">
+  </label>
+
+  <label>
+    Intensidad sonora (volumen)
+    <input type="range" min="0" max="1" step="0.01" value="0.8" id="volumeSlider">
+  </label>
+
+  <button id="toggleBtn">Iniciar sonido</button>
+</div>
+
+<audio id="bell" src="bell.mp3"></audio>
+
+<script>
+  const bell = document.getElementById("bell");
+  const intervalSlider = document.getElementById("intervalSlider");
+  const volumeSlider = document.getElementById("volumeSlider");
+  const toggleBtn = document.getElementById("toggleBtn");
+
+  let loop = null;
+  let playing = false;
+
+  function playBell() {
+    bell.currentTime = 0;
+    bell.volume = volumeSlider.value;
+    bell.play();
+  }
+
+  function startLoop() {
+    playBell();
+    loop = setInterval(playBell, intervalSlider.value);
+  }
+
+  function stopLoop() {
+    clearInterval(loop);
+    loop = null;
+  }
+
+  toggleBtn.addEventListener("click", () => {
+    playing = !playing;
+
+    if (playing) {
+      toggleBtn.textContent = "Detener sonido";
+      toggleBtn.classList.add("active");
+      startLoop();
+    } else {
+      toggleBtn.textContent = "Iniciar sonido";
+      toggleBtn.classList.remove("active");
+      stopLoop();
+    }
+  });
+
+  intervalSlider.addEventListener("input", () => {
+    if (playing) {
+      stopLoop();
+      startLoop();
+    }
+  });
+</script>
+
+</body>
+</html>
