@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Control de posición – Joystick</title>
+
+<style>
+  body {
+    margin: 0;
+    font-family: sans-serif;
+    background: #f0f0f0;
+    display: flex;
+    height: 100vh;
+  }
+
+  /* Área visual */
+  .scene {
+    flex: 1;
+    position: relative;
+    background: white;
+  }
+
+  .figure {
+    width: 60px;
+    height: 60px;
+    background: #3f51b5;
+    border-radius: 5%;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  /* Panel de control */
+  .controls {
+    width: 260px;
+    background: #fafafa;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-left: 1px solid #ddd;
+  }
+
+  /* Joystick */
+  .joystick {
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    background: #ddd;
+    position: relative;
+  }
+
+  .stick {
+    width: 40px;
+    height: 40px;
+    background: #555;
+    border-radius: 50%;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    cursor: pointer;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="scene">
+  <div class="figure" id="figure"></div>
+</div>
+
+<div class="controls">
+  <div class="joystick" id="joystick">
+    <div class="stick" id="stick"></div>
+  </div>
+</div>
+
+<script>
+  const joystick = document.getElementById("joystick");
+  const stick = document.getElementById("stick");
+  const figure = document.getElementById("figure");
+  const scene = document.querySelector(".scene");
+
+  const radius = joystick.offsetWidth / 2;
+  const stickRadius = stick.offsetWidth / 2;
+
+  let dragging = false;
+
+  stick.addEventListener("mousedown", () => dragging = true);
+  document.addEventListener("mouseup", () => dragging = false);
+
+  document.addEventListener("mousemove", (e) => {
+    if (!dragging) return;
+
+    const rect = joystick.getBoundingClientRect();
+    let x = e.clientX - rect.left - radius;
+    let y = e.clientY - rect.top - radius;
+
+    const distance = Math.sqrt(x * x + y * y);
+
+    if (distance > radius - stickRadius) {
+      const angle = Math.atan2(y, x);
+      x = Math.cos(angle) * (radius - stickRadius);
+      y = Math.sin(angle) * (radius - stickRadius);
+    }
+
+    stick.style.left = `${radius + x}px`;
+    stick.style.top = `${radius + y}px`;
+
+    // Normalizar valores (-1 a 1)
+    const normX = x / (radius - stickRadius);
+    const normY = y / (radius - stickRadius);
+
+    // Mover figura
+    const sceneRect = scene.getBoundingClientRect();
+    const figSize = figure.offsetWidth;
+
+    const posX = (sceneRect.width - figSize) / 2 + normX * (sceneRect.width / 2 - figSize);
+    const posY = (sceneRect.height - figSize) / 2 + normY * (sceneRect.height / 2 - figSize);
+
+    figure.style.left = `${posX}px`;
+    figure.style.top = `${posY}px`;
+    figure.style.transform = "none";
+  });
+</script>
+
+</body>
+</html>
