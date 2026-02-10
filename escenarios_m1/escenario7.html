@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Fin del recorrido</title>
+
+<style>
+  body {
+    margin: 0;
+    height: 100vh;
+    background: #f2f2f2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: sans-serif;
+  }
+
+  .container {
+    background: white;
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+    width: 520px;
+  }
+
+  .scene {
+    position: relative;
+    height: 120px;
+  }
+
+  /* Trayectoria */
+  .path {
+    position: absolute;
+    top: 60px;
+    left: 20px;
+    right: 20px;
+    height: 2px;
+    background: rgba(0,0,0,0.08);
+  }
+
+  /* Marcas de inicio y fin */
+  .marker {
+    position: absolute;
+    top: 52px;
+    width: 2px;
+    height: 16px;
+    background: rgba(0,0,0,0.12);
+  }
+
+  .marker.start {
+    left: 20px;
+  }
+
+  .marker.end {
+    right: 20px;
+  }
+
+  /* Punto móvil */
+  .dot {
+    width: 36px;
+    height: 36px;
+    background: #555;
+    border-radius: 50%;
+    position: absolute;
+    top: 42px;
+    left: 20px;
+    transition: background 0.2s, box-shadow 0.2s;
+  }
+
+  .dot.on {
+    background: #ffd500;
+    box-shadow: 0 0 16px rgba(255, 213, 0, 0.9);
+  }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <div class="scene">
+    <div class="path"></div>
+    <div class="marker start"></div>
+    <div class="marker end"></div>
+    <div class="dot" id="dot"></div>
+  </div>
+</div>
+
+<script>
+  const dot = document.getElementById("dot");
+
+  const startX = 20;
+  const endX = 460;
+  let x = startX;
+  let direction = 1;
+  let paused = false;
+
+  function animate() {
+    if (paused) return;
+
+    x += direction * 2;
+    dot.style.left = x + "px";
+
+    // Respuesta solo en los extremos
+    if (x <= startX || x >= endX) {
+      dot.classList.add("on");
+      paused = true;
+
+      setTimeout(() => {
+        dot.classList.remove("on");
+        direction *= -1;
+        paused = false;
+      }, 500);
+    }
+  }
+
+  setInterval(animate, 20);
+</script>
+
+
+</body>
+</html>
