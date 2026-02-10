@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Localización espacial</title>
+
+<style>
+  body {
+    margin: 0;
+    height: 100vh;
+    background: #f2f2f2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: sans-serif;
+  }
+
+  .container {
+    background: white;
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+    width: 520px;
+  }
+
+  .scene {
+    position: relative;
+    height: 160px;
+  }
+
+  /* Extremidad en movimiento */
+  .limb {
+    width: 40px;
+    height: 40px;
+    background: #555;
+    border-radius: 50%;
+    position: absolute;
+    top: 20px;
+    left: 0;
+  }
+
+  /* Zona espacial (muy sutil) */
+  .target-zone {
+    position: absolute;
+    left: 300px;
+    top: 0;
+    width: 2px;
+    height: 100px;
+    background: rgba(0,0,0,0.08);
+  }
+
+  /* Respuesta */
+  .response {
+    width: 40px;
+    height: 40px;
+    background: #bbb;
+    border-radius: 50%;
+    position: absolute;
+    left: 280px;
+    top: 100px;
+    transition: background 0.2s, box-shadow 0.2s;
+  }
+
+  .response.on {
+    background: #e53935;
+    box-shadow: 0 0 18px rgba(229, 57, 53, 0.9);
+  }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <div class="scene">
+    <div class="target-zone"></div>
+    <div class="limb" id="limb"></div>
+    <div class="response" id="response"></div>
+  </div>
+</div>
+
+<script>
+  const limb = document.getElementById("limb");
+  const response = document.getElementById("response");
+
+  let x = 0;
+  let direction = 1;
+
+  const minX = 0;
+  const maxX = 460;
+  const targetX = 300;
+  const tolerance = 4;
+
+  function animate() {
+    x += direction * 2;
+    limb.style.left = x + "px";
+
+    // Detectar paso por la posición espacial
+    if (Math.abs(x - targetX) <= tolerance) {
+      response.classList.add("on");
+    } else {
+      response.classList.remove("on");
+    }
+
+    // Rebotar en extremos
+    if (x >= maxX || x <= minX) {
+      direction *= -1;
+    }
+  }
+
+  setInterval(animate, 20);
+</script>
+
+</body>
+</html>
