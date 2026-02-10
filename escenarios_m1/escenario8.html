@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Acento rítmico perceptual</title>
+
+<style>
+    body {
+        margin: 0;
+        height: 100vh;
+        background: #111;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        font-family: sans-serif;
+        color: #eee;
+    }
+
+    .circle {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: #5fd3ff;
+        margin-bottom: 20px;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .pulse {
+        transform: scale(1.05);
+        box-shadow: 0 0 12px rgba(95, 211, 255, 0.4);
+    }
+
+    .accent {
+        transform: scale(1.18);
+        box-shadow:
+            0 0 30px rgba(95, 211, 255, 0.8),
+            0 0 55px rgba(95, 211, 255, 0.6);
+    }
+
+    button {
+        background: transparent;
+        border: 1px solid #5fd3ff;
+        color: #5fd3ff;
+        padding: 6px 16px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background 0.2s, color 0.2s;
+    }
+
+    button:hover {
+        background: #5fd3ff;
+        color: #111;
+    }
+</style>
+</head>
+
+<body>
+
+<div class="circle" id="circle"></div>
+<button id="toggleBtn">Iniciar</button>
+
+<audio id="sound" src="golpe1.mp3" preload="auto"></audio>
+
+<script>
+    const circle = document.getElementById("circle");
+    const sound = document.getElementById("sound");
+    const button = document.getElementById("toggleBtn");
+
+    const intervalTime = 600;
+    let count = 0;
+    let interval = null;
+    let isPlaying = false;
+
+    function triggerPulse() {
+        count++;
+
+        circle.classList.remove("pulse", "accent");
+
+        sound.currentTime = 0;
+
+        if (count === 3) {
+            sound.volume = 1; // acento (+50%)
+            circle.classList.add("accent");
+            count = 0;
+        } else {
+            sound.volume = 0.1; // golpes normales
+            circle.classList.add("pulse");
+        }
+
+        sound.play();
+
+        setTimeout(() => {
+            circle.classList.remove("pulse", "accent");
+        }, 150);
+    }
+
+    button.addEventListener("click", () => {
+        if (!isPlaying) {
+            interval = setInterval(triggerPulse, intervalTime);
+            button.textContent = "Pausar";
+            isPlaying = true;
+        } else {
+            clearInterval(interval);
+            button.textContent = "Iniciar";
+            isPlaying = false;
+        }
+    });
+</script>
+
+</body>
+</html>
