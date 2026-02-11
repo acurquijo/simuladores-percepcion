@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Tono antes del destello</title>
+
+<style>
+    body {
+        margin: 0;
+        height: 100vh;
+        background: #111;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        font-family: sans-serif;
+    }
+
+    .circle {
+        width: 130px;
+        height: 130px;
+        border-radius: 50%;
+        background: #444;
+        margin-bottom: 25px;
+        transition: 
+            background 0.15s ease,
+            box-shadow 0.15s ease,
+            transform 0.15s ease;
+    }
+
+    /* Destello */
+    .flash {
+        background: #5fd3ff;
+        box-shadow: 0 0 25px rgba(95, 211, 255, 0.6);
+    }
+
+    /* Respuesta */
+    .response {
+        transform: scale(1.15);
+        box-shadow:
+            0 0 35px rgba(95, 211, 255, 0.9),
+            0 0 60px rgba(95, 211, 255, 0.7);
+    }
+
+    button {
+        background: transparent;
+        border: 1px solid #5fd3ff;
+        color: #5fd3ff;
+        padding: 6px 18px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: 0.2s ease;
+    }
+
+    button:hover {
+        background: #5fd3ff;
+        color: #111;
+    }
+</style>
+</head>
+
+<body>
+
+<div class="circle" id="circle"></div>
+<button id="toggleBtn">Iniciar</button>
+
+<audio id="sound" src="golpe1.mp3" preload="auto"></audio>
+
+<script>
+    const circle = document.getElementById("circle");
+    const sound = document.getElementById("sound");
+    const button = document.getElementById("toggleBtn");
+
+    const cycleDuration = 1600;
+    let interval = null;
+    let isRunning = false;
+
+    function runSequence() {
+
+        // 1️⃣ Tono
+        sound.currentTime = 0;
+        sound.volume = 0.7;
+        sound.play();
+
+        // 2️⃣ Destello
+        setTimeout(() => {
+            circle.classList.add("flash");
+
+            setTimeout(() => {
+                circle.classList.remove("flash");
+
+                // 3️⃣ Respuesta tras destello
+                setTimeout(() => {
+                    circle.classList.add("response");
+
+                    setTimeout(() => {
+                        circle.classList.remove("response");
+                    }, 250);
+
+                }, 150);
+
+            }, 200);
+
+        }, 400);
+    }
+
+    button.addEventListener("click", () => {
+        if (!isRunning) {
+            runSequence(); // ejecuta inmediatamente
+            interval = setInterval(runSequence, cycleDuration);
+            button.textContent = "Pausar";
+            isRunning = true;
+        } else {
+            clearInterval(interval);
+            button.textContent = "Iniciar";
+            isRunning = false;
+        }
+    });
+</script>
+
+</body>
+</html>
