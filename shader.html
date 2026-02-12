@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+body{
+  background:#111;
+  display:flex;
+  justify-content:center;
+  font-family:sans-serif;
+}
+
+.wrapper{
+  width:550px;
+}
+
+canvas{
+  width:550px;
+  height:260px;
+  display:block;
+  background:black;
+  border-radius:12px;
+}
+
+.controls{
+  margin-top:10px;
+  color:white;
+  font-size:12px;
+}
+
+input, select{
+  width:100%;
+}
+</style>
+</head>
+<body>
+
+<div class="wrapper">
+
+<canvas id="canvas" width="550" height="260"></canvas>
+
+<div class="controls">
+Intensidad
+<input type="range" min="0" max="50" value="20" id="intensity">
+
+Velocidad
+<input type="range" min="0" max="5" step="0.1" value="2" id="speed">
+
+Dirección
+<select id="direction">
+  <option value="radial">Radial</option>
+  <option value="horizontal">Horizontal</option>
+  <option value="vertical">Vertical</option>
+</select>
+
+Halo pulsante
+<select id="haloToggle">
+  <option value="off">Off</option>
+  <option value="on">On</option>
+</select>
+
+Tamaño halo
+<input type="range" min="10" max="150" value="60" id="haloSize">
+
+Modo
+<select id="mode">
+  <option value="suave">Suave</option>
+  <option value="organico">Orgánico</option>
+  <option value="psicodelico">Psicodélico</option>
+</select>
+
+Color base 1
+<input type="color" id="color1" value="#6a2bff">
+
+Color base 2
+<input type="color" id="color2" value="#ff2bd6">
+
+</div>
+
+</div>
+
+<script>
+const color1Picker = document.getElementById("color1");
+const color2Picker = document.getElementById("color2");
+
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+let t = 0;
+
+function draw(){
+
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  const intensity = +intensitySlider.value;
+  const speed = +speedSlider.value;
+  const direction = directionSelect.value;
+  const haloOn = haloToggle.value === "on";
+  const haloSize = +haloSizeSlider.value;
+  const mode = modeSelect.value;
+
+  for(let x=0;x<canvas.width;x+=2){
+    for(let y=0;y<canvas.height;y+=2){
+
+      let value;
+
+      if(direction==="radial"){
+        let dx = x-275;
+        let dy = y-130;
+        let dist = Math.sqrt(dx*dx+dy*dy);
+        value = Math.sin(dist*0.05 - t*speed);
+      }
+      else if(direction==="horizontal"){
+        value = Math.sin(x*0.05 - t*speed);
+      }
+      else{
+        value = Math.sin(y*0.05 - t*speed);
+      }
+
+      value *= intensity;
+
+      let base1 = hexToRgb(color1Picker.value);
+let base2 = hexToRgb(color2Picker.value);
+
+let mix = (Math.sin(value*0.02)+1)/2;
+
+let r = base1.r*(1-mix) + base2.r*mix;
+let g = base1.g*(1-mix) + base2.g*mix;
+let b = base1.b*(1-mix) + base2.b*mix;
+
+if(mode==="organico"){
+  g += value*0.3;
+}
+
+if(mode==="psicodelico"){
+  r += value*0.5;
+  b -= value*0.4;
+}
+
+
+      ctx.fillStyle = `rgb(${r},${g},${b})`;
+      ctx.fillRect(x,y,2,2);
+    }
+  }
+
+  if(haloOn){
+    ctx.beginPath();
+    ctx.arc(275,130,haloSize + Math.sin(t*2)*10,0,Math.PI*2);
+    ctx.strokeStyle="rgba(255,255,255,0.4)";
+    ctx.lineWidth=2;
+    ctx.stroke();
+  }
+
+  t += 0.03;
+
+  requestAnimationFrame(draw);
+}
+
+const intensitySlider = document.getElementById("intensity");
+const speedSlider = document.getElementById("speed");
+const directionSelect = document.getElementById("direction");
+const haloToggle = document.getElementById("haloToggle");
+const haloSizeSlider = document.getElementById("haloSize");
+const modeSelect = document.getElementById("mode");
+
+draw();
+
+function hexToRgb(hex){
+  const bigint = parseInt(hex.slice(1), 16);
+  return {
+    r: (bigint >> 16) & 255,
+    g: (bigint >> 8) & 255,
+    b: bigint & 255
+  };
+}
+
+</script>
+
+</body>
+</html>

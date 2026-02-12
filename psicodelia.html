@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+body{
+  background:#111;
+  display:flex;
+  justify-content:center;
+  padding:20px;
+  font-family:sans-serif;
+}
+
+.wrapper{
+  width:550px;
+}
+
+canvas{
+  background:black;
+  border-radius:12px;
+  display:block;
+}
+
+.controls{
+  margin-top:10px;
+  font-size:13px;
+  color:white;
+}
+
+input[type="range"]{
+  width:100%;
+}
+</style>
+</head>
+<body>
+
+<div class="wrapper">
+<canvas id="psy" width="550" height="340"></canvas>
+
+<div class="controls">
+Velocidad
+<input type="range" id="speed" min="0.001" max="0.05" step="0.001" value="0.01">
+
+Intensidad forma
+<input type="range" id="shape" min="10" max="120" value="50">
+
+Dirección
+<input type="range" id="direction" min="-1" max="1" step="0.1" value="1">
+
+Color base
+<input type="range" id="color" min="0" max="360" value="260">
+</div>
+</div>
+
+<script>
+const canvas = document.getElementById("psy");
+const ctx = canvas.getContext("2d");
+
+let t = 0;
+let centerX = canvas.width/2;
+let centerY = canvas.height/2;
+
+function draw(){
+  const speed = parseFloat(document.getElementById("speed").value);
+  const shape = parseFloat(document.getElementById("shape").value);
+  const direction = parseFloat(document.getElementById("direction").value);
+  const baseHue = parseFloat(document.getElementById("color").value);
+
+  t += speed * direction;
+
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  for(let i=0;i<200;i++){
+    const angle = i*0.1 + t;
+    const radius = 120 + Math.sin(i*0.3 + t)*shape;
+
+    const x = centerX + Math.cos(angle)*radius;
+    const y = centerY + Math.sin(angle)*radius;
+
+    const hue = baseHue + Math.sin(t + i*0.05)*40;
+
+    ctx.beginPath();
+    ctx.arc(x,y,3,0,Math.PI*2);
+    ctx.fillStyle = `hsl(${hue},80%,60%)`;
+    ctx.fill();
+  }
+
+  requestAnimationFrame(draw);
+}
+
+draw();
+</script>
+</body>
+</html>
