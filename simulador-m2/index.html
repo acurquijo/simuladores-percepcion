@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Simulador Módulo 2</title>
+
+<style>
+  body { background: #111; display: flex; justify-content: center; padding: 20px; font-family: sans-serif; }
+  
+  .scene { 
+    width: 550px; height: 340px; background: #8094F9; 
+    border-radius: 16px; position: relative; overflow: hidden; 
+  }
+
+  /* --- CONTENEDOR PRINCIPAL DEL PERRO --- */
+.dog { 
+  left: 225px; 
+  bottom: 40px; 
+  /* Usamos 180px como ancho base para el perro más grande (panting) */
+  width: 180px; 
+  /* La altura proporcional al ancho de 180px basado en tus medidas originales */
+  height: 150px; 
+  position: absolute;
+}
+
+/* --- ESTADOS INDIVIDUALES --- */
+.dog > div {
+  position: absolute;
+  /* Alineación al fondo a la derecha */
+  bottom: 0;
+  right: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+}
+
+/* Cálculo de proporciones respecto a dog-panting (353.11px):
+   Panting: 353.11 / 353.11 = 100%
+   Eating: 333.58 / 353.11 = 94.47%
+   Sleeping: 218.41 / 353.11 = 61.85%
+*/
+
+#dog-panting { 
+  width: 100%; 
+  height: 100%; 
+}
+
+#dog-eating { 
+  width: 94.47%; 
+  /* Calculamos altura proporcional para no deformar */
+  height: 75.91%; 
+}
+
+#dog-sleeping { 
+  width: 61.85%; 
+  height: 63.78%; 
+}
+
+/* Aseguramos que los SVGs/Imágenes dentro llenen su contenedor asignado */
+.dog img, .dog svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+  .dog, .bell, .bowl, .bone { position: absolute; user-select: none; }
+  .dog { left: 225px; bottom: 40px; width: 180px; }
+  .bell { right: 40px; top: 30px; width: 80px; cursor: pointer; }
+  .bowl { right: 325px; bottom: 40px; width: 80px; }
+  .bone { width: 50px; cursor: grab; z-index: 10; }
+
+  /* Posiciones de los huesos */
+  #bone1 { left: 30px; bottom: 170px; }
+  #bone2 { left: 100px; bottom: 215px; }
+  #bone3 { left: 50px; bottom: 250px; }
+
+  .hidden { display: none !important; }
+  .pointer-cursor { cursor: pointer; }
+
+  /* Animación Campana */
+  .vibrate { animation: shake 0.5s infinite; }
+  @keyframes shake {
+    0% { transform: rotate(0deg); }
+    25% { transform: rotate(10deg); }
+    75% { transform: rotate(-10deg); }
+    100% { transform: rotate(0deg); }
+  }
+
+  #overlay {
+    position: absolute; 
+    top: 20px; 
+    left: 25px; 
+    width: 500px; 
+    height: 300px;
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    z-index: 100;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+
+  /* Aseguramos que el contenido del popup sea visible */
+  #overlay div { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+  #overlay img { max-width: 90%; max-height: 90%; object-fit: contain; }
+
+</style>
+</head>
+
+
+<body>
+
+<audio id="audioBell" src="sfx/bell.mp3"></audio>
+<audio id="audioEating" src="sfx/dog-eating.mp3"></audio>
+<audio id="audioPanting" src="sfx/dog-panting.mp3"></audio>
+
+<div class="scene" id="gameScene">
+  
+  <div class="bell" id="bell">
+    <img src="svg/bell.svg">
+  </div>
+
+  <div class="dog" id="dog-container">
+    <div id="dog-sleeping"><img src="svg/dog-sleeping.svg"></div>
+    <div id="dog-eating" class="hidden"><img src="svg/dog-eating.svg"></div>
+    <div id="dog-panting" class="hidden"><img src="svg/dog-panting.svg"></div>
+  </div>
+
+  <div class="bowl" id="bowl">
+    <div id="bowl-empty"><img src="svg/bowl-empty.svg"></div>
+    <div id="bowl-full" class="hidden"><img src="svg/bowl-full.svg"></div>
+  </div>
+
+  <div class="bone" id="bone1" draggable="true"><img src="svg/bone1.svg"></div>
+  <div class="bone" id="bone2" draggable="true"><img src="svg/bone2.svg"></div>
+  <div class="bone" id="bone3" draggable="true"><img src="svg/bone3.svg"></div>
+
+  <div id="overlay" class="hidden">
+    <div id="popup-try-again" >
+      <img src="svg/try-again.svg">
+      </div>
+    <div id="popup-end-simulation" class="hidden">
+      <img src="svg/end-simulation.svg">
+      </div>
+  </div>
+
+</div>
+
+<script>
+  let bonesLeft = 3;
+  let correctSequences = 0; 
+  let isWaitingForFood = false;
+  let isProcessing = false;
+  let windowTimer = null;
+
+  const bell = document.getElementById('bell');
+  const bowl = document.getElementById('bowl');
+  const overlay = document.getElementById('overlay');
+  
+  const audioBell = document.getElementById('audioBell');
+  const audioEating = document.getElementById('audioEating');
+  const audioPanting = document.getElementById('audioPanting');
+
+  // --- 1. CLIC EN CAMPANA ---
+  bell.addEventListener('click', () => {
+    if (isProcessing) return;
+
+    if (bonesLeft === 0) {
+      handleFinalAction();
+      return;
+    }
+
+    isWaitingForFood = true;
+    bell.classList.add('vibrate');
+    audioBell.currentTime = 0;
+    audioBell.play();
+
+    clearTimeout(windowTimer);
+    windowTimer = setTimeout(() => {
+      if (isWaitingForFood) {
+        executeEatingCycle(false, false); 
+      }
+    }, 2000); // 1 segundo de espera
+  });
+
+  // --- 2. ARRASTRE DE COMIDA ---
+  document.querySelectorAll('.bone').forEach(bone => {
+    bone.addEventListener('dragstart', (e) => {
+      if (isProcessing) { e.preventDefault(); return; }
+      e.dataTransfer.setData('text', bone.id);
+    });
+  });
+
+  bowl.addEventListener('dragover', (e) => e.preventDefault());
+
+  bowl.addEventListener('drop', (e) => {
+    e.preventDefault();
+    const id = e.dataTransfer.getData('text');
+    const bone = document.getElementById(id);
+    
+    if (bone && !isProcessing) {
+      bone.classList.add('hidden');
+      bonesLeft--;
+      
+      // REQUERIMIENTO 1: CAMBIO INMEDIATO DEL BOWL
+      setBowl(true); 
+      
+      const wasConditioned = isWaitingForFood; 
+      if (wasConditioned) correctSequences++;
+
+      clearTimeout(windowTimer); 
+      isWaitingForFood = false;
+      
+      // El perro reacciona 1 segundo después del drop
+      setTimeout(() => {
+        executeEatingCycle(true, wasConditioned);
+      }, 1000); 
+    }
+  });
+
+  // --- 3. CICLO DE ANIMACIÓN ---
+  function executeEatingCycle(hasFood, wasConditioned) {
+    isProcessing = true;
+    bell.classList.remove('vibrate');
+    isWaitingForFood = false;
+
+    showDog('dog-eating');
+
+    if (hasFood) {
+      audioEating.currentTime = 0;
+      audioEating.play();
+    }
+
+    setTimeout(() => {
+      showDog('dog-sleeping');
+      setBowl(false);
+      isProcessing = false;
+
+      // Verificación de fallo: sin comida y sin completar las 3 veces
+      if (bonesLeft === 0 && correctSequences < 3) {
+        setTimeout(() => showPopup('popup-try-again'), 500);
+      }
+    }, 2000);
+  }
+
+  // --- 4. ACCIÓN FINAL (PANTING) ---
+  function handleFinalAction() {
+    if (correctSequences >= 3) {
+      isProcessing = true;
+      audioBell.play();
+      showDog('dog-panting');
+      audioPanting.play();
+
+      setTimeout(() => {
+        showPopup('popup-end-simulation');
+      }, 3000);
+    } else {
+      showPopup('popup-try-again');
+    }
+  }
+
+  // --- UTILIDADES ---
+  function showDog(id) {
+    document.getElementById('dog-sleeping').classList.add('hidden');
+    document.getElementById('dog-eating').classList.add('hidden');
+    document.getElementById('dog-panting').classList.add('hidden');
+    document.getElementById(id).classList.remove('hidden');
+  }
+
+  function setBowl(full) {
+    document.getElementById('bowl-empty').classList.toggle('hidden', full);
+    document.getElementById('bowl-full').classList.toggle('hidden', !full);
+  }
+
+  // REQUERIMIENTO 2: MEJORA EN VISIBILIDAD DE POPUPS
+  function showPopup(id) {
+    overlay.classList.remove('hidden');
+    document.getElementById('popup-try-again').classList.add('hidden');
+    document.getElementById('popup-end-simulation').classList.add('hidden');
+    
+    const targetPopup = document.getElementById(id);
+    if(targetPopup) {
+      targetPopup.classList.remove('hidden');
+    }
+  }
+
+  overlay.addEventListener('click', () => {
+    location.reload();
+  });
+
+</script>
+
+</body>
+
+</html>
