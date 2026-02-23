@@ -2,103 +2,121 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Escenario</title>
+<title>Escenario 1</title>
 
 <style>
   body {
-    background: #111; /* Fondo oscuro para resaltar el experimento */
+    background: #ffffff;
+    font-family: Arial, sans-serif;
+    text-align: center;
+  }
+
+  .container {
+    background: white;
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+    width: 550px;
+    margin-top: 20px;
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
-    margin: 0;
+    gap: 30px;
   }
 
-  .scene {
-    width: 550px;
-    height: 340px;
-    background: #ffffff;
-    border-radius: 8px;
-    position: relative;
-    overflow: hidden;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  .circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: #bbb;
+    opacity: 0.3;
+    transition: opacity 0.2s;
   }
 
-  svg {
-    width: 100%;
-    height: 100%;
+  .on {
+    opacity: 1;
   }
 
-  .stimulus {
-    opacity: 0;
+  .red {
+    background: red;
+    opacity: 1;
   }
 </style>
 </head>
 
 <body>
 
-<div class="scene">
-  <svg viewBox="0 0 550 340">
-    <circle cx="275" cy="170" r="50" fill="#dddddd" />
+<!--
+<h2>Escenario</h2>
+<p>La respuesta ocurre cuando aparece la tercera luz.</p>
+-->
 
-    <circle id="stim1" r="15" fill="#4a90e2" class="stimulus" />
-
-    <circle id="stim2" r="15" fill="#e94e4e" class="stimulus" />
-  </svg>
+<div class="container" style="height: 160px;">
+  <div id="c1" class="circle"></div>
+  <div id="c2" class="circle"></div>
+  <div id="c3" class="circle"></div>
+  <br>
+  <div id="c4" class="circle" style="display:none;"></div>
 </div>
 
+<!--
+<div class="container">
+  <div id="c1" class="circle"></div>
+  <div id="c2" class="circle"></div>
+  <div id="c3" class="circle"></div>
+</div>
+<div class="container" style="height: 80px;">
+    <div id="c4" class="circle" style="display:none;"></div>
+</div>
+-->
 <script>
-const stim1 = document.getElementById("stim1");
-const stim2 = document.getElementById("stim2");
+const c1 = document.getElementById("c1");
+const c2 = document.getElementById("c2");
+const c3 = document.getElementById("c3");
+const c4 = document.getElementById("c4");
 
-// Coordenadas del centro
-const centerX = 275;
-const centerY = 170;
+const interval = 800; // ms entre luces
+const responseDuration = 1000;
 
-// Configuración de tiempos (ms)
-const approachTime = 800; // Duración del desplazamiento
-const pauseBetween = 500; // Pausa entre el estímulo azul y el rojo
-const cyclePause = 1000;  // Pausa antes de reiniciar el ciclo completo
-
-/**
- * Función que anima un círculo hacia el centro
- * @param {Element} element - El círculo de SVG
- * @param {number} startX - Posición X inicial
- * @param {number} startY - Posición Y inicial
- */
-async function animateStimulus(element, startX, startY) {
-  // Posicionar al inicio y hacer visible
-  element.setAttribute("cx", startX);
-  element.setAttribute("cy", startY);
-  
-  const animation = element.animate([
-    { opacity: 1, cx: startX, cy: startY },
-    { opacity: 1, cx: centerX, cy: centerY, offset: 0.9 }, // Llega al centro
-    { opacity: 0, cx: centerX, cy: centerY }              // Desaparece
-  ], {
-    duration: approachTime,
-    easing: 'ease-in'
-  });
-
-  return animation.finished;
+function reset() {
+  [c1, c2, c3].forEach(c => c.classList.remove("on"));
+  c4.style.display = "none";
+  c4.classList.remove("red");
 }
 
-async function startSequence() {
-  // 1. Estímulo Azul desde la izquierda
-  await animateStimulus(stim1, 50, 170);
+function sequence() {
+  reset();
 
-  // 2. Intervalo constante
-  await new Promise(resolve => setTimeout(resolve, pauseBetween));
+  setTimeout(() => {
+    c1.classList.add("on");
+  }, interval);
 
-  // 3. Estímulo Rojo desde arriba
-  await animateStimulus(stim2, 275, 40);
+  setTimeout(() => {
+    c1.classList.remove("on");
+    c2.classList.add("on");
+  }, interval * 2);
 
-  // 4. Pausa antes de repetir el loop
-  setTimeout(startSequence, cyclePause);
+  setTimeout(() => {
+    c2.classList.remove("on");
+    c3.classList.add("on");
+
+    // Estímulo adicional (respuesta)
+    c4.style.display = "block";
+    c4.classList.add("red");
+
+    setTimeout(() => {
+      c4.style.display = "none";
+      c3.classList.remove("on");
+    }, responseDuration);
+
+  }, interval * 3);
 }
 
-// Iniciar el loop
-startSequence();
+// Repetición constante
+setInterval(sequence, interval * 5);
+
+// Inicio
+sequence();
 </script>
 
 </body>
