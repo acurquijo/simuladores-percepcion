@@ -2,19 +2,31 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Estimulación pasiva – Contactos secuenciales</title>
+<title>Escenario</title>
 
 <style>
   body {
-    background: #f2f2f2;
-    font-family: Arial, sans-serif;
-    text-align: center;
+    background: #111; /* Fondo oscuro para resaltar el experimento */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+  }
+
+  .scene {
+    width: 550px;
+    height: 340px;
+    background: #ffffff;
+    border-radius: 8px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
   }
 
   svg {
-    display: block;
-    margin: 40px auto;
-    background: white;
+    width: 100%;
+    height: 100%;
   }
 
   .stimulus {
@@ -25,76 +37,69 @@
 
 <body>
 
-<h2>Escenario</h2>
-<!--
-<p>Un contacto fijo seguido de un segundo contacto tras un intervalo constante.</p>
--->
+<div class="scene">
+  <svg viewBox="0 0 550 340">
+    <circle cx="275" cy="170" r="50" fill="#dddddd" />
 
-<svg width="600" height="400">
+    <circle id="stim1" r="15" fill="#4a90e2" class="stimulus" />
 
-  <!-- Círculo central (organismo) -->
-  <circle cx="300" cy="200" r="60" fill="#dddddd" />
-
-  <!-- Estímulo 1 -->
-  <circle id="stim1" cx="100" cy="200" r="15" fill="#4a90e2" class="stimulus" />
-
-  <!-- Estímulo 2 -->
-  <circle id="stim2" cx="300" cy="50" r="15" fill="#e94e4e" class="stimulus" />
-
-</svg>
+    <circle id="stim2" r="15" fill="#e94e4e" class="stimulus" />
+  </svg>
+</div>
 
 <script>
 const stim1 = document.getElementById("stim1");
 const stim2 = document.getElementById("stim2");
 
-const centerX = 300;
-const centerY = 200;
+// Coordenadas del centro
+const centerX = 275;
+const centerY = 170;
 
-const approachTime = 600;
-const pauseBetween = 600;
+// Configuración de tiempos (ms)
+const approachTime = 800; // Duración del desplazamiento
+const pauseBetween = 500; // Pausa entre el estímulo azul y el rojo
+const cyclePause = 1000;  // Pausa antes de reiniciar el ciclo completo
 
-const totalCycle =
-  approachTime +
-  pauseBetween +
-  approachTime +
-  500; // pausa antes de repetir
-
-function animateStimulus(stim, startX, startY) {
-  stim.style.transition = "none";
-  stim.setAttribute("cx", startX);
-  stim.setAttribute("cy", startY);
-  stim.style.opacity = 1;
-
-  requestAnimationFrame(() => {
-    stim.style.transition =
-      `cx ${approachTime}ms linear, cy ${approachTime}ms linear`;
-    stim.setAttribute("cx", centerX);
-    stim.setAttribute("cy", centerY);
+/**
+ * Función que anima un círculo hacia el centro
+ * @param {Element} element - El círculo de SVG
+ * @param {number} startX - Posición X inicial
+ * @param {number} startY - Posición Y inicial
+ */
+async function animateStimulus(element, startX, startY) {
+  // Posicionar al inicio y hacer visible
+  element.setAttribute("cx", startX);
+  element.setAttribute("cy", startY);
+  
+  const animation = element.animate([
+    { opacity: 1, cx: startX, cy: startY },
+    { opacity: 1, cx: centerX, cy: centerY, offset: 0.9 }, // Llega al centro
+    { opacity: 0, cx: centerX, cy: centerY }              // Desaparece
+  ], {
+    duration: approachTime,
+    easing: 'ease-in'
   });
 
-  setTimeout(() => {
-    stim.style.opacity = 0;
-  }, approachTime + 100);
+  return animation.finished;
 }
 
-function sequence() {
-  // Primer contacto (siempre igual)
-  animateStimulus(stim1, 100, 200);
+async function startSequence() {
+  // 1. Estímulo Azul desde la izquierda
+  await animateStimulus(stim1, 50, 170);
 
-  // Segundo contacto tras intervalo fijo
-  setTimeout(() => {
-    animateStimulus(stim2, 300, 50);
-  }, approachTime + pauseBetween);
+  // 2. Intervalo constante
+  await new Promise(resolve => setTimeout(resolve, pauseBetween));
 
-  // Repetición del ciclo completo
-  setTimeout(sequence, totalCycle);
+  // 3. Estímulo Rojo desde arriba
+  await animateStimulus(stim2, 275, 40);
+
+  // 4. Pausa antes de repetir el loop
+  setTimeout(startSequence, cyclePause);
 }
 
-// Inicio
-sequence();
+// Iniciar el loop
+startSequence();
 </script>
-
 
 </body>
 </html>
-
