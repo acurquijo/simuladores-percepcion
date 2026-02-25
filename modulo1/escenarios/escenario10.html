@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Escenario 10</title>
+
+<style>
+  body {
+    background: #f4f4f4;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    font-family: sans-serif;
+  }
+
+  /* Panel de visualización ajustado a 550 x 340 */
+  .stage {
+    width: 550px;
+    height: 340px;
+    background: #ffffff;
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    border: 1px solid #ddd;
+    
+    /* Centrado de los elementos internos */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 60px; /* Distribución equilibrada entre círculos */
+  }
+
+  /* Estímulos laterales */
+  .stimulus {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #162593;
+    opacity: 0.15;
+    transition: opacity 0.1s, transform 0.1s;
+    border: 2px solid #162593;
+  }
+
+  .stimulus.active {
+    opacity: 1;
+    transform: scale(1.1);
+    box-shadow: 0 0 15px rgba(22, 37, 147, 0.4);
+  }
+
+  /* Organismo central */
+  .organism {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: #888;
+    opacity: 0.3;
+    transition: all 0.1s ease;
+    border: 3px solid #888;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 10px;
+    color: white;
+    font-weight: bold;
+  }
+
+  /* Estado cuando detecta coincidencia */
+  .organism.respond {
+    opacity: 1;
+    background: #00e2e0; 
+    border-color: #00e2e0;
+    transform: scale(1.2);
+    box-shadow: 0 0 30px rgba(46, 204, 196, 0.6);
+  }
+
+  /* Decoración */
+  .label {
+    position: absolute;
+    top: 20px;
+    font-size: 12px;
+    color: #bbb;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="stage">
+  
+  <div id="stimA" class="stimulus"></div>
+  
+  <div id="organism" class="organism"></div>
+  
+  <div id="stimB" class="stimulus"></div>
+</div>
+
+<script>
+const stimA = document.getElementById("stimA");
+const stimB = document.getElementById("stimB");
+const organism = document.getElementById("organism");
+
+let stateA = false;
+let stateB = false;
+
+/**
+ * Función que activa/desactiva los estímulos de forma aleatoria
+ */
+function randomToggle(stim, setState) {
+  const STIM_ON_MIN = 400;
+  const STIM_ON_MAX = 800;
+  const STIM_OFF_MIN = 300;
+  const STIM_OFF_MAX = 900;
+
+  const onDuration = Math.random() * (STIM_ON_MAX - STIM_ON_MIN) + STIM_ON_MIN;
+  const offDuration = Math.random() * (STIM_OFF_MAX - STIM_OFF_MIN) + STIM_OFF_MIN;
+
+  // Encender
+  stim.classList.add("active");
+  setState(true);
+
+  // Programar apagado
+  setTimeout(() => {
+    stim.classList.remove("active");
+    setState(false);
+  }, onDuration);
+
+  // Programar siguiente ciclo tras el tiempo de apagado
+  setTimeout(() => {
+    randomToggle(stim, setState);
+  }, onDuration + offDuration);
+}
+
+/**
+ * Verificación constante de la regla: A Y B deben estar activos
+ */
+function checkCoincidence() {
+  if (stateA && stateB) {
+    organism.classList.add("respond");
+  } else {
+    organism.classList.remove("respond");
+    organism.innerText = "";
+  }
+  requestAnimationFrame(checkCoincidence);
+}
+
+// Iniciar procesos independientes
+randomToggle(stimA, (v) => stateA = v);
+randomToggle(stimB, (v) => stateB = v);
+
+// Monitoreo de coincidencia en tiempo real
+checkCoincidence();
+</script>
+
+</body>
+</html>

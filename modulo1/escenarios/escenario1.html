@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Escenario 1</title>
+
+<style>
+  body {
+    background: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    font-family: Arial, sans-serif;
+  }
+
+  /* Panel de visualización con dimensiones exactas */
+  .scene {
+    width: 550px;
+    height: 340px;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 50px; /* Espacio entre la fila de arriba y la de abajo */
+    border: 1px solid #ddd;
+  }
+
+  /* Contenedor de las luces de secuencia */
+  .sequence-row {
+    display: flex;
+    gap: 40px;
+  }
+
+  .circle {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: #eeeeee;
+    border: 2px solid #ddd;
+    transition: all 0.2s ease;
+  }
+
+  /* Estado encendido para luces de secuencia (Azul) */
+  .circle.on {
+    background: #00e2e0;
+    box-shadow: 0 0 15px rgba(0, 255, 242, 0.8);
+  }
+
+  /* Luz de respuesta (Roja) */
+  #c4 {
+    width: 90px;
+    height: 90px;
+    background: transparent;
+    border: 2px solid transparent;
+    transition: all 0.2s ease;
+    /* Mantenemos el espacio aunque sea invisible */
+    visibility: hidden; 
+  }
+
+  #c4.red {
+    visibility: visible;
+    background: #162593;
+    box-shadow: 0 0 18px rgba(56, 53, 229, 0.9);
+  }
+
+  .label {
+    position: absolute;
+    bottom: 20px;
+    color: #999;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="scene">
+  <div class="sequence-row">
+    <div id="c1" class="circle"></div>
+    <div id="c2" class="circle"></div>
+    <div id="c3" class="circle"></div>
+  </div>
+
+  <div id="c4" class="circle"></div>
+</div>
+
+<script>
+const c1 = document.getElementById("c1");
+const c2 = document.getElementById("c2");
+const c3 = document.getElementById("c3");
+const c4 = document.getElementById("c4");
+
+const interval = 800; 
+const responseDuration = 1000;
+
+function reset() {
+  [c1, c2, c3].forEach(c => c.classList.remove("on"));
+  c4.classList.remove("red");
+}
+
+function sequence() {
+  reset();
+
+  // Luz 1
+  setTimeout(() => {
+    c1.classList.add("on");
+  }, interval);
+
+  // Luz 2
+  setTimeout(() => {
+    c1.classList.remove("on");
+    c2.classList.add("on");
+  }, interval * 2);
+
+  // Luz 3 + Aparición de Luz 4 (Roja)
+  setTimeout(() => {
+    c2.classList.remove("on");
+    c3.classList.add("on");
+
+    // Activamos la luz roja
+    c4.classList.add("red");
+
+    // Apagar todo tras la duración de la respuesta
+    setTimeout(() => {
+      reset();
+    }, responseDuration);
+
+  }, interval * 3);
+}
+
+// El ciclo total dura: (intervalo * 3) + duración respuesta + un pequeño margen
+const totalCycleTime = (interval * 3) + responseDuration + 500;
+
+// Repetición
+setInterval(sequence, totalCycleTime);
+
+// Inicio inmediato
+sequence();
+</script>
+
+</body>
+</html>

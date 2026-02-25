@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Escenario 5</title>
+
+<style>
+  body {
+    background: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    font-family: sans-serif;
+  }
+
+  /* Contenedor de visualización: 550 x 340 */
+  .stage {
+    width: 550px;
+    height: 340px;
+    background: #fff;
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 0 30px rgba(0,0,0,0.2);
+  }
+
+  /* Estímulos */
+  .stimulus {
+    width: 45px;
+    height: 45px;
+    background: #162593; /* Color cian eléctrico para alta persistencia */
+    border-radius: 50%;
+    position: absolute;
+    opacity: 0;
+    box-shadow: 0 0 25px rgba(0, 242, 255, 0.5);
+    /* Transición ultra rápida para evitar estelas no deseadas */
+    transition: opacity 0.03s; 
+  }
+
+  /* Posiciones en el espacio */
+  #stimA { left: 120px; }
+  #stimB { right: 120px; }
+
+  .active {
+    opacity: 1 !important;
+  }
+  </style>
+</head>
+
+<body>
+
+<div class="stage">
+  <div id="stimA" class="stimulus"></div>
+  <div id="stimB" class="stimulus"></div>
+</div>
+
+<script>
+  const stimA = document.getElementById("stimA");
+  const stimB = document.getElementById("stimB");
+
+  /* CALIBRACIÓN DE VELOCIDAD:
+     - onTime: 80ms (tiempo de exposición corto para mayor velocidad)
+     - offTime: 50ms (intervalo óptimo para la ilusión de salto)
+     - loopPause: 600ms (pausa entre repeticiones del ciclo A->B)
+  */
+  const onTime = 100;    
+  const offTime = 80;   
+  const loopPause = 200; 
+
+  async function startLinearIllusion() {
+    while (true) {
+      // 1. Aparece en Punto A
+      stimA.classList.add("active");
+      await delay(onTime);
+      stimA.classList.remove("active");
+
+      // 2. Breve silencio visual (el cerebro "mueve" el objeto aquí)
+      await delay(offTime);
+
+      // 3. Aparece en Punto B
+      stimB.classList.add("active");
+      await delay(onTime);
+      stimB.classList.remove("active");
+
+      // 4. Pausa antes de reiniciar el ciclo desde A
+      await delay(loopPause);
+    }
+  }
+
+  function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  // Iniciar
+  startLinearIllusion();
+</script>
+
+</body>
+</html>

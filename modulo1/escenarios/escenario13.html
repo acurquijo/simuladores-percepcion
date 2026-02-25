@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Escenario 13</title>
+
+<style>
+  body {
+    margin: 0;
+    height: 100vh;
+    background: #f0f0f0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: sans-serif;
+  }
+
+  /* Panel de visualización solicitado: 550 x 340 px */
+  .scene {
+    width: 550px;
+    height: 340px;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    position: relative;
+    overflow: hidden;
+    border: 1px solid #ddd;
+  }
+
+  /* Trayectoria centrada verticalmente */
+  .path {
+    position: absolute;
+    top: 50%; /* Centro exacto vertical */
+    left: 40px;
+    right: 40px;
+    height: 2px;
+    background: rgba(0,0,0,0.08);
+    transform: translateY(-50%);
+  }
+
+  /* Marcas de inicio y fin centradas */
+  .marker {
+    position: absolute;
+    top: 50%;
+    width: 4px;
+    height: 30px;
+    background: #ccc;
+    transform: translateY(-50%);
+    border-radius: 2px;
+  }
+
+  .marker.start { left: 40px; }
+  .marker.end { right: 40px; }
+
+  /* Punto móvil agrandado y centrado */
+  .dot {
+    width: 54px; /* Tamaño agrandado */
+    height: 54px;
+    background: #162593;
+    border-radius: 50%;
+    position: absolute;
+    top: 50%;
+    left: 40px;
+    transform: translateY(-50%); /* Alineación central vertical */
+    transition: background 0.2s, box-shadow 0.2s, transform 0.2s ease;
+    z-index: 10;
+  }
+
+  /* Estado activo en los extremos */
+  .dot.on {
+    background: #00e2e0;
+    box-shadow: 0 0 25px rgba(0, 255, 255, 0.8);
+    /* Mantenemos el centrado vertical durante el escalado */
+    transform: translateY(-50%) scale(1.1); 
+  }
+</style>
+</head>
+
+<body>
+
+<div class="scene">
+  <div class="path"></div>
+  <div class="marker start"></div>
+  <div class="marker end"></div>
+  <div class="dot" id="dot"></div>
+</div>
+
+<script>
+  const dot = document.getElementById("dot");
+
+  // Parámetros de movimiento
+  const margin = 40;
+  const dotWidth = 54;
+  const sceneWidth = 550;
+  
+  const startX = margin;
+  const endX = sceneWidth - margin - dotWidth; // Calculado dinámicamente
+  
+  let x = startX;
+  let direction = 1;
+  let paused = false;
+  const speed = 3; // Velocidad ligeramente ajustada
+
+  function animate() {
+    if (paused) return;
+
+    x += direction * speed;
+    dot.style.left = x + "px";
+
+    // Detección de extremos
+    if (x <= startX || x >= endX) {
+      // Ajuste fino para que no se pase de los límites
+      x = (direction === 1) ? endX : startX;
+      dot.style.left = x + "px";
+
+      // Activación visual
+      dot.classList.add("on");
+      paused = true;
+
+      // Pausa de medio segundo antes de regresar
+      setTimeout(() => {
+        dot.classList.remove("on");
+        direction *= -1;
+        paused = false;
+        requestAnimationFrame(animate);
+      }, 500);
+    } else {
+      requestAnimationFrame(animate);
+    }
+  }
+
+  // Iniciar usando requestAnimationFrame para mayor suavidad
+  requestAnimationFrame(animate);
+</script>
+
+</body>
+</html>

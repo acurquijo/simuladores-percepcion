@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Escenario 6</title>
+
+<style>
+  body {
+    background: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    font-family: sans-serif;
+  }
+
+  .container {
+    width: 550px;
+    height: 340px;
+    background: #fff;
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 0 30px rgba(0,0,0,0.2);
+  }
+
+  .row {
+    display: flex;
+    gap: 40px;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .dot {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: #bbb;
+    transition: background 0.2s, box-shadow 0.2s;
+  }
+
+  .on {
+    background: #00e2e0;
+    box-shadow: 0 0 15px rgba(0, 255, 242, 0.8);
+  }
+
+  .response {
+    background: #bbb;
+  }
+
+  .response.on {
+    background: #162593;
+    box-shadow: 0 0 18px rgba(56, 53, 229, 0.9);
+  }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <div class="row">
+    <div class="dot" id="dot1"></div>
+    <div class="dot" id="dot2"></div>
+    <div class="dot response" id="dot3"></div>
+  </div>
+</div>
+
+<script>
+  const dot1 = document.getElementById("dot1");
+  const dot2 = document.getElementById("dot2");
+  const dot3 = document.getElementById("dot3");
+
+  let state1 = false;
+  let state2 = false;
+
+  function randomToggle(dot, setter) {
+    const active = Math.random() > 0.5;
+    setter(active);
+    dot.classList.toggle("on", active);
+  }
+
+  function updateResponse() {
+    if (state1 && state2) {
+      dot3.classList.add("on");
+    } else {
+      dot3.classList.remove("on");
+    }
+  }
+
+  setInterval(() => {
+    randomToggle(dot1, (v) => state1 = v);
+    randomToggle(dot2, (v) => state2 = v);
+    updateResponse();
+  }, 600); // ritmo tranquilo y perceptible
+</script>
+
+</body>
+</html>

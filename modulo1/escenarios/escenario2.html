@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Escenario 2</title>
+
+<style>
+  body {
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
+    font-family: sans-serif;
+  }
+
+  /* Contenedor de visualización ajustado */
+  .scene {
+    width: 550px;
+    height: 340px;
+    background: #ffffff; /* Fondo blanco solicitado */
+    border-radius: 8px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid #ccc;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  }
+
+  /* Luces con colores más vibrantes para fondo blanco */
+  .light {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    margin: 0 25px;
+    background: #f0f0f0; /* Estado apagado (gris muy claro) */
+    transition: background 0.05s;
+    border: 2px solid #ddd;
+  }
+
+  /* Estados activos */
+  .light-1.active {
+    background: #00e2e0; /* Azul intenso */
+    box-shadow: 0 0 30px rgba(0, 255, 255, 0.6);
+  }
+
+  .light-2.active {
+    background: #162593; /* Rojo intenso para la pausa larga */
+    box-shadow: 0 0 30px rgba(83, 71, 255, 0.6);
+  }
+
+  /* Botón dentro del recuadro */
+  #btnToggle {
+    position: absolute;
+    align-items: center;
+    bottom: 40px;
+    padding: 6px 18px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    background: transparent;
+    border: 1px solid #162593;
+    color: #162593;
+    border-radius: 20px;
+    z-index: 10;
+    transition: 0.2s ease;
+  }
+
+  #btnToggle:hover {
+    background: #c7c7c7;
+  }
+
+  #btnToggle.playing {
+    background: #c7c7c7;
+  }
+</style>
+</head>
+<body>
+
+<div class="scene">
+  <div id="light1" class="light light-1"></div>
+  <div id="light2" class="light light-2"></div>
+  
+  <button id="btnToggle">INICIAR</button>
+</div>
+
+<audio id="audioGolpe" src="golpe1.mp3"></audio>
+
+
+
+<script>
+  const light1 = document.getElementById('light1');
+  const light2 = document.getElementById('light2');
+  const btnToggle = document.getElementById('btnToggle');
+  const audio = document.getElementById('audioGolpe');
+
+  let isRunning = false;
+  let timerId = null;
+
+  // CONFIGURACIÓN ACELERADA
+  const lightPulseDuration = 400; // La luz brilla solo 400ms (antes 1s)
+  const thresholdLongPause = 800;  // Pausa se considera larga después de 0.8s
+
+  btnToggle.addEventListener('click', () => {
+    isRunning = !isRunning;
+    
+    if (isRunning) {
+      btnToggle.textContent = "PAUSAR";
+      btnToggle.classList.add('playing');
+      runCycle();
+    } else {
+      btnToggle.textContent = "INICIAR";
+      btnToggle.classList.remove('playing');
+      clearTimeout(timerId);
+      light1.classList.remove('active');
+      light2.classList.remove('active');
+    }
+  });
+
+  function runCycle() {
+    if (!isRunning) return;
+
+    // 1. Activar Luz 1 y Sonido
+    light1.classList.add('active');
+    light2.classList.remove('active');
+    audio.currentTime = 0;
+    audio.play();
+
+    // 2. Apagar luz rápido (independiente de la duración del audio para dar agilidad)
+    setTimeout(() => {
+      light1.classList.remove('active');
+      
+      if (!isRunning) return;
+
+      // 3. Pausa aleatoria ACELERADA (entre 150ms y 1200ms)
+      const nextPause = Math.floor(Math.random() * 1050) + 150;
+
+      // 4. Activar Luz 2 si la espera es "larga"
+      if (nextPause > thresholdLongPause) {
+        setTimeout(() => {
+          if (isRunning) light2.classList.add('active');
+        }, 100);
+      }
+
+      // 5. Siguiente ciclo
+      timerId = setTimeout(runCycle, nextPause);
+
+    }, lightPulseDuration);
+  }
+</script>
+
+</body>
+</html>

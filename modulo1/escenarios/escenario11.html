@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Escenario 11</title>
+
+<style>
+  body {
+    margin: 0;
+    height: 100vh;
+    background: #e0e0e0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: sans-serif;
+  }
+
+  /* Panel de visualización solicitado */
+  .scene {
+    width: 550px;
+    height: 340px;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    position: relative;
+    overflow: hidden;
+    border: 1px solid #ccc;
+  }
+
+  /* Línea de meta/objetivo */
+  .target-zone {
+    position: absolute;
+    left: 275px; /* Centro exacto */
+    top: 40px;
+    width: 2px;
+    height: 260px;
+    background: rgba(0,0,0,0.05);
+  }
+
+  /* Círculo en movimiento (Limb) */
+  .limb {
+    width: 50px;
+    height: 50px;
+    background: #162593;
+    border-radius: 50%;
+    position: absolute;
+    top: 80px;
+    left: 0;
+    z-index: 2;
+  }
+
+  /* Círculo de respuesta (iluminación) */
+  .response {
+    width: 60px;
+    height: 60px;
+    background: #ddd;
+    border-radius: 50%;
+    position: absolute;
+    left: 245px; /* Centrado respecto a los 550px (275 - 30) */
+    bottom: 80px;
+    transition: all 0.1s ease;
+  }
+
+  /* Estado de contacto */
+  .response.on {
+    background: #00e2e0;
+    box-shadow: 0 0 30px rgba(0, 226, 224, 0.8);
+    transform: scale(1.1);
+  }
+</style>
+</head>
+
+<body>
+
+<div class="scene">
+  <div class="target-zone"></div>
+  <div class="limb" id="limb"></div>
+  <div class="response" id="response"></div>
+</div>
+
+<script>
+  const limb = document.getElementById("limb");
+  const response = document.getElementById("response");
+
+  let x = 0;
+  let direction = 1;
+  let isPaused = false;
+  
+  // CONFIGURACIÓN
+  const speed = 4;           // Velocidad incrementada
+  const sceneWidth = 550;
+  const limbWidth = 50;
+  const maxX = sceneWidth - limbWidth;
+  const targetX = 250;       // Punto donde el centro del círculo toca la línea
+  const pauseDuration = 100; // Milisegundos de la pausa al contacto
+
+  function animate() {
+    if (isPaused) return; // Detener animación si está en pausa
+
+    x += direction * speed;
+    limb.style.left = x + "px";
+
+    // Detectar contacto con el punto central
+    // Verificamos si cruzamos el centro y si no acabamos de pausar
+    if (direction === 1 && x >= targetX && x < targetX + speed) {
+      triggerContact();
+    } else if (direction === -1 && x <= targetX && x > targetX - speed) {
+      triggerContact();
+    }
+
+    // Rebotar en los extremos
+    if (x >= maxX || x <= 0) {
+      direction *= -1;
+    }
+
+    requestAnimationFrame(animate);
+  }
+
+  function triggerContact() {
+    isPaused = true;
+    response.classList.add("on");
+
+    // Pausa breve antes de continuar
+    setTimeout(() => {
+      response.classList.remove("on");
+      isPaused = false;
+      
+      // Forzamos un pequeño avance para salir del rango de detección 
+      // y evitar bucles infinitos en el mismo punto
+      x += direction * speed; 
+      
+      requestAnimationFrame(animate);
+    }, pauseDuration);
+  }
+
+  // Iniciar
+  requestAnimationFrame(animate);
+</script>
+
+</body>
+</html>
