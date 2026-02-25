@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Laboratorio Perceptual 6</title>
+
+<style>
+  :root {
+    --primary: #162593;
+    --accent: #00e2e0;
+    --white: #ffffff;
+    --bg-slider: #e0e0e0;
+  }
+
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f0f2f5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+  }
+
+  /* 1. Panel de visualización de tamaño 500 x 340 px */
+  .container {
+    background: white;
+    padding: 25px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    width: 500px;
+    height: 340px;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+  }
+
+  /* 2. Visualización ARRIBA */
+  .images {
+    flex: 1; /* Ocupa el espacio superior */
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .images img {
+    width: 100px; /* Tamaño ajustado para el nuevo panel */
+    height: auto;
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Controles ABAJO */
+  .controls {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  label {
+    font-size: 13px;
+    font-weight: bold;
+    color: #444;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* 3. SLIDERS PERSONALIZADOS */
+  input[type="range"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 100%;
+    height: 10px;
+    background: var(--bg-slider);
+    border-radius: 10px;
+    outline: none;
+    /* El degradado se maneja vía JS para que sea dinámico */
+    background-image: linear-gradient(to right, var(--accent), var(--primary));
+    background-repeat: no-repeat;
+    background-size: 100% 100%; 
+    cursor: pointer;
+  }
+
+  /* Thumb para Chrome/Safari/Edge */
+  input[type="range"]::-webkit-slider-thumb {
+    appearance: none;
+    -webkit-appearance: none;
+    height: 24px;
+    width: 24px;
+    border-radius: 50%;
+    background: var(--primary);
+    cursor: pointer;
+    border: 2px solid var(--white);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  }
+
+  /* Thumb para Firefox */
+  input[type="range"]::-moz-range-thumb {
+    height: 24px;
+    width: 24px;
+    border-radius: 50%;
+    background: var(--primary);
+    cursor: pointer;
+    border: 2px solid var(--white);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  }
+
+  /* 4. BOTÓN PERSONALIZADO */
+  button {
+    padding: 12px;
+    border-radius: 10px;
+    border: none;
+    background: var(--primary);
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    width: 100%;
+  }
+
+  button:hover {
+    filter: brightness(1.2);
+    transform: translateY(-1px);
+  }
+
+  button.active {
+    background: #333;
+    box-shadow: 0 4px 12px rgba(22, 37, 147, 0.3);
+  }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <div class="images">
+    <img src="mujer1.png" id="img1" style="transform: rotate(180deg);">
+    <img src="mujer2.png" id="img2" style="transform: rotate(180deg);">
+  </div>
+
+  <div class="controls">
+    <div>
+      <label for="rotationSlider">Rotación</label>
+      <input type="range" min="0" max="180" value="180" id="rotationSlider">
+    </div>
+
+    <button id="refBtn" onclick="toggleReference()">
+       Referencia fija
+    </button>
+  </div>
+</div>
+
+<script>
+  const slider = document.getElementById("rotationSlider");
+  const img1 = document.getElementById("img1");
+  const img2 = document.getElementById("img2");
+  const refBtn = document.getElementById("refBtn");
+
+  let referenceFixed = false;
+
+  // Función para actualizar el color del slider dinámicamente
+  function updateSliderFill() {
+    const val = slider.value;
+    const min = slider.min ? slider.min : 0;
+    const max = slider.max ? slider.max : 100;
+    const percentage = (val - min) * 100 / (max - min);
+    
+    // Ajusta el tamaño del fondo degradado
+    slider.style.backgroundSize = percentage + '% 100%';
+  }
+
+  function updateRotation() {
+    const angle = slider.value;
+    updateSliderFill();
+
+    if (referenceFixed) {
+      img1.style.transform = "rotate(0deg)";
+      img2.style.transform = `rotate(${angle}deg)`;
+    } else {
+      img1.style.transform = `rotate(${angle}deg)`;
+      img2.style.transform = `rotate(${angle}deg)`;
+    }
+  }
+
+  function toggleReference() {
+    referenceFixed = !referenceFixed;
+    refBtn.classList.toggle("active", referenceFixed);
+    refBtn.innerHTML = referenceFixed ? "🔓 Soltar Referencia" : "🔒 Referencia fija";
+    updateRotation();
+  }
+
+  // Inicialización
+  slider.addEventListener("input", updateRotation);
+  updateSliderFill(); // Carga inicial del color
+</script>
+
+</body>
+</html>

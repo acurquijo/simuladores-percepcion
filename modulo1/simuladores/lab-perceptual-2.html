@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Laboratorio Perceptual 2</title>
+
+<style>
+  :root {
+    --primary: #162593;
+    --accent: #00e2e0;
+    --track-bg: #e0e0e0;
+  }
+
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+  }
+
+  /* Panel de visualización solicitado */
+  .container {
+    background: #ececec;
+    padding: 40px;
+    border-radius: 20px;
+    width: 550px;
+    height: 340px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Distribución centrada verticalmente */
+    gap: 25px;
+  }
+
+  .control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  label {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* Estilización de la barra de rango (Slider) */
+  input[type="range"] {
+    appearance: none;
+    width: 100%;
+    height: 12px;
+    background: var(--track-bg);
+    border-radius: 10px; /* Extremos redondeados */
+    outline: none;
+    /* Degradado dinámico aplicado mediante JS */
+    background-image: linear-gradient(to right, var(--accent), var(--primary));
+    background-repeat: no-repeat;
+  }
+
+  /* El círculo (Toggle/Thumb) */
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    height: 26px; /* Más alto que la barra */
+    width: 26px;
+    border-radius: 50%;
+    background: var(--primary);
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    transition: transform 0.1s ease-in-out;
+    border: 2px solid #fff;
+  }
+
+  input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.1);
+  }
+
+  /* Botón de acción */
+  button {
+    margin-top: 10px;
+    padding: 14px;
+    border-radius: 12px;
+    border: none;
+    background: var(--primary);
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  button:hover {
+    filter: brightness(1.2);
+    box-shadow: 0 4px 12px rgba(22, 37, 147, 0.3);
+  }
+
+  button.active {
+    background: #333; /* Verde al estar activo */
+  }
+
+  span.value-display {
+    color: var(--primary);
+    font-size: 14px;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <div class="control-group">
+    <label>
+      Velocidad
+      <span class="value-display" id="intervalVal">1000 ms</span>
+    </label>
+    <input type="range" min="300" max="2000" value="1000" id="intervalSlider">
+  </div>
+
+  <div class="control-group">
+    <label>
+      Intensidad
+      <span class="value-display" id="volumeVal">80%</span>
+    </label>
+    <input type="range" min="0" max="1" step="0.01" value="0.8" id="volumeSlider">
+  </div>
+
+  <button id="toggleBtn">Iniciar sonido</button>
+</div>
+
+<audio id="bell" src="bell.mp3"></audio>
+
+<script>
+  const bell = document.getElementById("bell");
+  const intervalSlider = document.getElementById("intervalSlider");
+  const volumeSlider = document.getElementById("volumeSlider");
+  const toggleBtn = document.getElementById("toggleBtn");
+  
+  const intervalVal = document.getElementById("intervalVal");
+  const volumeVal = document.getElementById("volumeVal");
+
+  let loop = null;
+  let playing = false;
+
+  // Función para actualizar el fondo del slider (degradado que sigue al círculo)
+  function updateSliderBackground(slider) {
+    const min = slider.min;
+    const max = slider.max;
+    const val = slider.value;
+    const percentage = (val - min) * 100 / (max - min);
+    
+    // El color de fondo es el degradado hasta el porcentaje, luego gris
+    slider.style.backgroundSize = percentage + '% 100%';
+    slider.style.backgroundColor = '#e0e0e0'; // Parte no recorrida
+  }
+
+  // Inicializar fondos
+  [intervalSlider, volumeSlider].forEach(slider => {
+    updateSliderBackground(slider);
+    slider.addEventListener("input", () => updateSliderBackground(slider));
+  });
+
+  function playBell() {
+    bell.currentTime = 0;
+    bell.volume = volumeSlider.value;
+    bell.play();
+  }
+
+  function startLoop() {
+    playBell();
+    loop = setInterval(playBell, intervalSlider.value);
+  }
+
+  function stopLoop() {
+    clearInterval(loop);
+    loop = null;
+  }
+
+  toggleBtn.addEventListener("click", () => {
+    playing = !playing;
+    if (playing) {
+      toggleBtn.textContent = "Detener sonido";
+      toggleBtn.classList.add("active");
+      startLoop();
+    } else {
+      toggleBtn.textContent = "Iniciar sonido";
+      toggleBtn.classList.remove("active");
+      stopLoop();
+    }
+  });
+
+  intervalSlider.addEventListener("input", () => {
+    intervalVal.textContent = intervalSlider.value + " ms";
+    if (playing) {
+      stopLoop();
+      startLoop();
+    }
+  });
+
+  volumeSlider.addEventListener("input", () => {
+    volumeVal.textContent = Math.round(volumeSlider.value * 100) + "%";
+  });
+</script>
+
+</body>
+</html>

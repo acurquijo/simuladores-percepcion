@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Laboratorio Perceptual 4</title>
+
+<style>
+  :root {
+    --primary: #162593;
+    --accent: #00e2e0;
+    --bg-panel: #ececec;
+    --white: #ffffff;
+  }
+
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: white; /* Fondo solicitado */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+
+  /* Contenedor Principal: 550 x 340 px */
+  .container {
+    width: 550px;
+    height: 340px;
+    display: flex;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+    overflow: hidden;
+    border: 1px solid #ddd;
+  }
+
+  /* Área Visual (Escena) */
+  .scene {
+    flex: 1;
+    position: relative;
+    background: var(--bg-panel); /* Fondo solicitado */
+    overflow: hidden;
+  }
+
+  .figure {
+    width: 40px;
+    height: 40px;
+    background: var(--primary);
+    border-radius: 8px;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 4px 10px rgba(22, 37, 147, 0.3);
+  }
+
+  /* Panel de Control */
+  .controls {
+    width: 180px;
+    background: var(--white);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border-left: 1px solid #eee;
+    padding: 20px;
+    text-align: center;
+  }
+
+  .instruction-tag {
+    background: var(--primary);
+    color: var(--white);
+    font-size: 10px;
+    font-weight: bold;
+    padding: 4px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    letter-spacing: 1px;
+  }
+
+  .label-control {
+    font-size: 13px;
+    color: #444;
+    font-weight: 600;
+    margin-bottom: 20px;
+  }
+
+  /* Joystick */
+  .joystick-base {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: #f0f0f0;
+    position: relative;
+    border: 1px solid var(--accent);
+    box-shadow: inset 0 4px 10px rgba(0,0,0,0.05);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .stick {
+    width: 45px;
+    height: 45px;
+    background: var(--primary);
+    border-radius: 50%;
+    position: absolute;
+    cursor: grab;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    z-index: 10;
+    touch-action: none;
+  }
+
+  .stick:active {
+    cursor: grabbing;
+    background: #1a2aab;
+  }
+
+  .hint {
+    margin-top: 15px;
+    font-size: 11px;
+    color: #888;
+    font-style: italic;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <div class="scene" id="scene">
+    <div class="figure" id="figure"></div>
+  </div>
+
+  <div class="controls">
+    <div class="instruction-tag">Panel de Control</div>
+    <div class="label-control"></div>
+    
+    <div class="joystick-base" id="joystick">
+      <div class="stick" id="stick"></div>
+    </div>
+
+    <div class="hint">Arrastra el círculo para mover la figura</div>
+  </div>
+</div>
+
+<script>
+  const joystick = document.getElementById("joystick");
+  const stick = document.getElementById("stick");
+  const figure = document.getElementById("figure");
+  const scene = document.getElementById("scene");
+
+  let dragging = false;
+  const baseRadius = joystick.offsetWidth / 2;
+  const stickRadius = stick.offsetWidth / 2;
+  const maxLimit = baseRadius - 10; // Límite de movimiento interno
+
+  // Centrar stick inicialmente
+  stick.style.left = `${baseRadius - stickRadius}px`;
+  stick.style.top = `${baseRadius - stickRadius}px`;
+
+  function handleMove(e) {
+    if (!dragging) return;
+
+    const rect = joystick.getBoundingClientRect();
+    
+    // Posición del ratón/toque respecto al centro de la base
+    let clientX = e.clientX || (e.touches ? e.touches[0].clientX : 0);
+    let clientY = e.clientY || (e.touches ? e.touches[0].clientY : 0);
+
+    let x = clientX - rect.left - baseRadius;
+    let y = clientY - rect.top - baseRadius;
+
+    // Calcular distancia desde el centro
+    const distance = Math.sqrt(x * x + y * y);
+
+    // Limitar movimiento al radio de la base
+    if (distance > maxLimit) {
+      const angle = Math.atan2(y, x);
+      x = Math.cos(angle) * maxLimit;
+      y = Math.sin(angle) * maxLimit;
+    }
+
+    // Mover el stick visualmente
+    stick.style.left = `${baseRadius + x - stickRadius}px`;
+    stick.style.top = `${baseRadius + y - stickRadius}px`;
+
+    // Normalizar valores (-1 a 1) para mover la figura
+    const normX = x / maxLimit;
+    const normY = y / maxLimit;
+
+    moveFigure(normX, normY);
+  }
+
+  function moveFigure(nx, ny) {
+    const sRect = scene.getBoundingClientRect();
+    const fSize = figure.offsetWidth;
+
+    // Calculamos los límites internos de la escena
+    const margin = 20;
+    const availableWidth = (sRect.width / 2) - (fSize / 2) - margin;
+    const availableHeight = (sRect.height / 2) - (fSize / 2) - margin;
+
+    const posX = (sRect.width / 2) + (nx * availableWidth);
+    const posY = (sRect.height / 2) + (ny * availableHeight);
+
+    figure.style.left = `${posX - (fSize/2)}px`;
+    figure.style.top = `${posY - (fSize/2)}px`;
+  }
+
+  // Eventos de ratón
+  stick.addEventListener("mousedown", () => dragging = true);
+  window.addEventListener("mouseup", () => {
+    dragging = false;
+    // Opcional: Volver al centro al soltar
+    /*
+    stick.style.left = `${baseRadius - stickRadius}px`;
+    stick.style.top = `${baseRadius - stickRadius}px`;
+    moveFigure(0, 0);
+    */
+  });
+  window.addEventListener("mousemove", handleMove);
+
+  // Soporte táctil
+  stick.addEventListener("touchstart", (e) => { dragging = true; e.preventDefault(); });
+  window.addEventListener("touchend", () => dragging = false);
+  window.addEventListener("touchmove", (e) => { handleMove(e); e.preventDefault(); }, { passive: false });
+
+</script>
+
+</body>
+</html>

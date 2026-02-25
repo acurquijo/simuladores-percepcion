@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Laboratorio Perceptual 3</title>
+<style>
+  :root { --primary: #162593; --accent: #00e2e0; --track-bg: #e0e0e0; }
+  body { 
+    font-family: sans-serif;
+    background: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+  }
+  
+  .container {
+    background: #ececec;
+    width: 550px;
+    height: 340px;
+    border-radius: 20px;
+    padding: 15px;
+    box-sizing: border-box;
+    display: flex; 
+    flex-direction: row; /* Cambio a horizontal */
+    gap: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+  }
+
+  /* Escena al 80% */
+  .scene { 
+    position: relative;
+    width: 75%;
+    height: 100%; 
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #eee; 
+  }
+
+  /* Controles al 20% (ajustado a 25% para legibilidad de botones) */
+  .controls { 
+    width: 25%;
+    display: flex;
+    flex-direction: column; 
+    justify-content: center;
+    gap: 20px; 
+  }
+
+  .dog {
+    position: absolute;
+    bottom: 0;
+    left: 40px;
+    height: 240px;
+    width: auto;
+    z-index: 2;
+  }
+
+  .hand {
+    position: absolute;
+    top: 15px;
+    right: -180px;
+    width: 130px;
+    z-index: 1;
+    transition: right 0.1s ease-out;
+  }
+
+  .button-group { display: flex; flex-direction: column; gap: 8px; }
+  button {
+    width: 100%; padding: 12px 5px; border-radius: 8px; border: 2px solid #eee;
+    background: #f8f9fa; color: #555; font-weight: 600; cursor: pointer; font-size: 11px;
+  }
+  button.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+  .slider-group { display: flex; flex-direction: column; gap: 8px; }
+  label { font-size: 11px; font-weight: 600; color: #333; text-align: center; }
+
+  input[type="range"] {
+    appearance: none; -webkit-appearance: none; width: 100%; height: 8px;
+    background: var(--track-bg); border-radius: 10px; outline: none;
+    background-image: linear-gradient(to right, var(--accent), var(--primary));
+    background-repeat: no-repeat; background-size: 0% 100%;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    appearance: none; -webkit-appearance: none; height: 20px; width: 20px;
+    border-radius: 50%; background: var(--primary); border: 2px solid #fff;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="scene">
+    <img src="dog_neutro.png" id="dog" class="dog">
+    <img src="hand.png" id="hand" class="hand">
+  </div>
+
+  <div class="controls">
+    <div class="button-group">
+      <button id="btnNo" class="active" onclick="setMode('mad')">❌​ NO DA LA PATA</button>
+      <button id="btnYes" onclick="setMode('paw')">✅​ DA LA PATA</button>
+    </div>
+    <div class="slider-group">
+      <label>MANO: </label>
+      <input type="range" min="0" max="100" value="0" id="handSlider">
+    </div>
+  </div>
+</div>
+
+<script>
+  const dog = document.getElementById("dog");
+  const hand = document.getElementById("hand");
+  const slider = document.getElementById("handSlider");
+  const btnYes = document.getElementById("btnYes");
+  const btnNo = document.getElementById("btnNo");
+  const distVal = document.getElementById("distVal");
+
+  let dogMode = 'mad';
+
+  function setMode(mode) {
+    dogMode = mode;
+    btnYes.classList.toggle("active", mode === 'paw');
+    btnNo.classList.toggle("active", mode === 'mad');
+  }
+
+  slider.addEventListener("input", () => {
+    const val = slider.value;
+    slider.style.backgroundSize = val + '% 100%';
+    distVal.textContent = val + "%";
+
+    const pos = -180 + (val / 100) * 280; 
+    hand.style.right = pos + "px";
+
+    if (val > 80) {
+      dog.src = dogMode === 'paw' ? "dog_paw.png" : "dog_mad.png";
+    } else {
+      dog.src = "dog_neutro.png";
+    }
+  });
+</script>
+</body>
+</html>
