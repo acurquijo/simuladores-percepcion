@@ -20,30 +20,20 @@
         }
 
         #organism {
-            position: absolute; top: 50%; left: 60px; width: 30px; height: 30px;
-            background-color: #162593; border-radius: 50%;
-            box-shadow: 0 0 10px rgba(0, 226, 224, 0.8);
-            transform: translateY(-50%); transition: left 0.5s ease, border-radius 0.3s ease, background-color 0.3s ease;
+            position: absolute; top: 50%; left: 60px; width: 50px; height: 50px;
+            background: url('imgs/bee_fly.png') no-repeat center;
+            background-size: contain;
+            transform: translateY(-50%); transition: left 0.5s ease;
         }
-
-        .organic-shape { border-radius: 20% 80% 30% 70% !important; background-color: #e2641a !important; transform: translateY(-50%) rotate(45deg) !important; }
 
         #popup { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; z-index: 10; }
 
         .triangle { display: inline-block; width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 14px solid #bbb; margin-left: 5px; vertical-align: middle; }
         .tri-active { border-bottom-color: #00e2e0; }
 
-        #nav-btns { position: absolute; bottom: 1px; left: 150px; width: 250px; height: 114px; display: flex; justify-content: center; }
-        .btn-footer { 
-            width: 100%;       /* Cambia el ancho aquí */
-            cursor: pointer;    /* Hace que aparezca la mano al pasar el ratón */
-            /* Puedes agregar más estilos aquí, por ejemplo: */
-            transition: transform 0.2s; 
-        }
-
-        .btn-footer:hover {
-            transform: scale(1.05); /* Efecto de aumento al pasar el mouse */
-        }
+        #nav-btns { position: absolute; bottom: 1px; left: 150px; width: 250px; height: 60px; display: flex; justify-content: center; align-items: center; }
+        .btn-footer { width: 100%; cursor: pointer; transition: transform 0.2s; }
+        .btn-footer:hover { transform: scale(1.05); }
 
         .bee { position: absolute; left: 0px; bottom: 0px; width: 200px; z-index: 2; }
     </style>
@@ -51,10 +41,12 @@
 <body>
 
 <div id="sim-container">
+    <!--Inicio-->
     <div id="screen-1" class="screen active" style="background-image: url('imgs/bg-1.png');">
         <img src="imgs/start.png" id="btn-start-1" class="btn" onclick="goTo('screen-2')">
     </div>
 
+    <!--Instrucciones-->
     <div id="screen-2" class="screen" style="background-image: url('imgs/bg-2.png');">
         <img src="imgs/b-instruction.png" id="btn-instr" class="btn" onclick="togglePopup(true)">
         <img src="imgs/b-start.png" id="btn-start-2" class="btn" onclick="startGameplay()">
@@ -68,6 +60,7 @@
         </div>
     </div>
 
+    <!--Niveles-->
     <div id="screen-3" class="screen" style="background-image: url('imgs/bg-3.png');">
         <div id="preview-area"><div id="organism"></div></div>
         <div id="controls">
@@ -76,36 +69,36 @@
         </div>
         <div id="status" style="position:absolute; top:13px; right:20px; color: #fff; font-size:14px; font-weight:bold;">Intentos: 0/10</div>
         <div id="level-display" style="position:absolute; top:10px; left:20px; color: #fff; font-size:14px; font-weight: bold;">
-            Nivel <span id="lvl-num">1</span> | Repeticiones: 
+            Nivel <span id="lvl-num">1</span> | Serie: 
             <span id="t1" class="triangle"></span><span id="t2" class="triangle"></span><span id="t3" class="triangle"></span>
         </div>
     </div>
 
+    <!--Niveles completados-->
     <div id="screen-4" class="screen" style="background-image: url('imgs/bg-4.png');">
-        <img src="imgs/bee.png" class="bee">
+        <img src="imgs/Bee_surprised.png" class="bee">
         <div id="feedback-window" style="position:absolute; top:20px; left:20px; width:500px; height:205px; background:url('imgs/popup-1.png') no-repeat center center; background-size: cover;">
             <h3 id="res-title" style="margin-top:60px; text-align:center; color: #fff;"></h3>
             <p id="res-text" style="padding:10px 60px; font-size:12px; color: #fff; text-align:center;"></p>
         </div>
-        <img src="imgs/b-retry.png" class="btn" style="width:100px; top:5px; right:15px;" onclick="retryLevel()">
         <div id="nav-btns"></div>
     </div>
 
+    <!--Final-->
     <div id="screen-5" class="screen" style="background-image: url('imgs/bg-1.png');">
-        <img src="imgs/bee.png" class="bee">
+        <img src="imgs/Bee_pink.png" class="bee">
         <img src="imgs/re-start.png" id="btn-restart" class="btn" onclick="location.reload()">
     </div>
 </div>
 
 <script>
-    let attempts = 0, successfulSequences = 0, organismPos = 60;
-    let isWaitingForB = false, isOrganic = false, timerA = null, timerLevel2 = null;
-    let currentLevel = 1, levelRepetitions = 1;
-    let moveDirection = 1; 
+    let interactions = 0, hitsInCurrentAttempt = 0, organismPos = 60;
+    let currentLevel = 1, consecutiveWins = 0;
+    let isWaitingForB = false, moveDirection = 1, gameActive = false;
+    let timerLevel, timerResponse;
+    let probMoveLevel3 = 0.4;
 
-    // Límites estrictos del área de juego (500px de ancho)
-    const MIN_LIMIT = 60; 
-    const MAX_LIMIT = 500 - 30 - 60; // AnchoDiv - AnchoOrg - MargenDerecho (410px)
+    const MIN_LIMIT = 60, MAX_LIMIT = 410;
 
     function goTo(screenId) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -113,150 +106,164 @@
         if(screenId === 'screen-2') updateInstructions();
     }
 
+    function updateInstructions() {
+        const p = document.getElementById('instr-text');
+        if(currentLevel === 1) p.innerText = "Nivel 1: Presiona A y luego B (antes de 1 segundo) para que el organismo avance.";
+        if(currentLevel === 2) p.innerText = "Nivel 2: El organismo avanza solo. Presiona B para confirmar el avance.";
+        if(currentLevel === 3) p.innerText = "Nivel 3: Presiona A. Si el organismo se mueve, presiona B rápido. A medida que aciertes, será más fácil controlarlo.";
+    }
+
     function startGameplay() {
         resetGameplayState();
         goTo('screen-3');
         updateLevelUI();
-        if(currentLevel === 2) planNextOrganicChange();
-    }
-
-    function updateInstructions() {
-        const p = document.getElementById('instr-text');
-        if(currentLevel === 1) p.innerText = "Nivel 1: Presiona A y luego B (antes de 1 segundo) para avanzar.";
-        if(currentLevel === 2) p.innerText = "Nivel 2: El organismo cambiará de forma solo. Presiona B rápidamente cuando cambie.";
-        if(currentLevel === 3) p.innerText = "Nivel 3: Al presionar A el organismo puede cambiar. Si cambia, presiona B. Si presionas A de nuevo, fallarás.";
+        gameActive = true;
+        // Solo el Nivel 2 tiene ciclo automático de inicio
+        if(currentLevel === 2) autoMoveCycle();
     }
 
     function updateLevelUI() {
         document.getElementById('lvl-num').innerText = currentLevel;
-        document.getElementById('status').innerText = `Intentos: ${attempts}/10`;
+        document.getElementById('status').innerText = `Intentos: ${interactions}/10`;
         for(let i=1; i<=3; i++) {
-            document.getElementById('t'+i).className = i <= levelRepetitions ? 'triangle tri-active' : 'triangle';
+            document.getElementById('t'+i).className = i <= consecutiveWins ? 'triangle tri-active' : 'triangle';
         }
     }
 
-    function togglePopup(show) { document.getElementById('popup').style.display = show ? 'block' : 'none'; }
-
-    function planNextOrganicChange() {
-        if(attempts >= 10 || currentLevel !== 2) return;
-        timerLevel2 = setTimeout(triggerOrganicForm, Math.random() * 2000 + 2000);
+    function autoMoveCycle() {
+        if(!gameActive || interactions >= 10 || currentLevel !== 2) return;
+        timerLevel = setTimeout(() => { if(gameActive) triggerMove(); }, 1500);
     }
 
-    function triggerOrganicForm() {
-        if(attempts >= 10) return;
-        isOrganic = true;
-        document.getElementById('organism').classList.add('organic-shape');
-        setTimeout(() => {
-            if(isOrganic) {
-                isOrganic = false;
-                document.getElementById('organism').classList.remove('organic-shape');
-                registerAttempt(false);
-                if(currentLevel === 2) planNextOrganicChange();
+    function triggerMove() {
+        isWaitingForB = true;
+        moveOrganism(20); 
+        timerResponse = setTimeout(() => {
+            if(isWaitingForB) {
+                isWaitingForB = false;
+                registerInteraction(false);
+                if(currentLevel === 2 && interactions < 10) autoMoveCycle();
             }
         }, 1000);
     }
 
     function moveOrganism(px) {
-        let step = px * moveDirection;
-        let targetPos = organismPos + step;
-
-        // Si el movimiento se sale de los límites, invertir dirección
-        if (targetPos > MAX_LIMIT || targetPos < MIN_LIMIT) {
+        let target = organismPos + (px * moveDirection);
+        if (target > MAX_LIMIT || target < MIN_LIMIT) {
             moveDirection *= -1;
-            targetPos = organismPos + (px * moveDirection);
+            target = organismPos + (px * moveDirection);
         }
-
-        // Aplicar posición final con abrazadera de seguridad
-        organismPos = Math.max(MIN_LIMIT, Math.min(MAX_LIMIT, targetPos));
+        organismPos = target;
         document.getElementById('organism').style.left = organismPos + 'px';
     }
 
-    function registerAttempt(isSuccess) {
-        if (attempts >= 10) return;
-        attempts++;
-        if (isSuccess) {
-            successfulSequences++;
-            moveOrganism(40);
+    function registerInteraction(isHit) {
+        if (interactions >= 10 || !gameActive) return;
+        interactions++;
+        if (isHit) {
+            hitsInCurrentAttempt++;
+            moveOrganism(10);
         } else {
-            // Retroceso: se mueve 20px en dirección contraria al flujo actual
-            let backStep = 20 * (moveDirection * -1);
-            let targetPos = organismPos + backStep;
-            organismPos = Math.max(MIN_LIMIT, Math.min(MAX_LIMIT, targetPos));
+            let back = organismPos - (10 * moveDirection);
+            organismPos = Math.max(MIN_LIMIT, Math.min(MAX_LIMIT, back));
             document.getElementById('organism').style.left = organismPos + 'px';
         }
         updateLevelUI();
-        if (attempts >= 10) setTimeout(showResults, 800);
+        if (interactions >= 10) {
+            gameActive = false;
+            clearTimeout(timerLevel);
+            setTimeout(showResults, 800);
+        }
     }
 
     function pressA() {
-        if (attempts >= 10) return;
+        if(!gameActive || isWaitingForB) return;
+
         if(currentLevel === 1) {
-            if(isWaitingForB) return;
             isWaitingForB = true;
-            timerA = setTimeout(() => { if(isWaitingForB) { isWaitingForB = false; registerAttempt(false); } }, 1000);
-        } else if(currentLevel === 2) {
-            moveOrganism(20);
-        } else if(currentLevel === 3) {
-            if(isOrganic) { 
-                isOrganic = false;
-                document.getElementById('organism').classList.remove('organic-shape');
-                registerAttempt(false);
+            timerResponse = setTimeout(() => {
+                if(isWaitingForB) { isWaitingForB = false; registerInteraction(false); }
+            }, 1000);
+        } 
+        else if(currentLevel === 3) {
+            // Lógica Probabilidad Nivel 3:
+            // Racha 0 (1ra secuencia): probMoveLevel3 (base 0.4)
+            // Racha 1 (2da secuencia): probMoveLevel3 (aumentada en showResults)
+            // Racha 2 (3ra secuencia): A mueve directamente
+            if(consecutiveWins >= 2) {
+                registerInteraction(true); // A es suficiente
             } else {
-                moveOrganism(20);
-                if(Math.random() > 0.6) triggerOrganicForm();
+                if(Math.random() < probMoveLevel3) triggerMove();
+                // Si no se mueve, no se espera respuesta (no cuenta interacción)
             }
         }
     }
 
     function pressB() {
-        if (attempts >= 10) return;
-        if(currentLevel === 1) {
-            if(isWaitingForB) { clearTimeout(timerA); isWaitingForB = false; registerAttempt(true); }
-            else registerAttempt(false);
-        } else {
-            if(isOrganic) { 
-                isOrganic = false;
-                document.getElementById('organism').classList.remove('organic-shape');
-                registerAttempt(true); 
-                if(currentLevel === 2) planNextOrganicChange(); 
-            } else registerAttempt(false);
+        if(!gameActive) return;
+        if(!isWaitingForB) {
+            registerInteraction(false);
+            return;
         }
+        clearTimeout(timerResponse);
+        isWaitingForB = false;
+        registerInteraction(true);
+        if(currentLevel === 2 && interactions < 10) autoMoveCycle();
     }
 
     function showResults() {
-        clearTimeout(timerLevel2);
         goTo('screen-4');
         const nav = document.getElementById('nav-btns');
-        let result = (successfulSequences <= 4) ? "Respuesta fallida" : (successfulSequences === 5) ? "Respuesta incierta" : "Respuesta acertada";
-        document.getElementById('res-title').innerText = result;
-        document.getElementById('res-text').innerText = `Nivel ${currentLevel} - Repetición ${levelRepetitions}/3\nAciertos: ${successfulSequences}/10`;
-        nav.innerHTML = "";
-        let btnNext = document.createElement('img');
-        btnNext.className = "btn-footer";
-        if(levelRepetitions < 3) {
-            btnNext.src = "imgs/next-try.png";
-            btnNext.onclick = () => { levelRepetitions++; startGameplay(); };
-        } else if(currentLevel < 3) {
-            btnNext.src = "imgs/next-level.png";
-            btnNext.onclick = () => { currentLevel++; levelRepetitions = 1; startGameplay(); };
-        } else {
-            btnNext.src = "imgs/end.png";
-            btnNext.onclick = () => goTo('screen-5');
-        }
-        nav.appendChild(btnNext);
-    }
+        const title = document.getElementById('res-title');
+        const text = document.getElementById('res-text');
+        
+        let isCorrect = (hitsInCurrentAttempt >= 6);
+        title.innerText = (hitsInCurrentAttempt <= 4) ? "Respuesta fallida" : (hitsInCurrentAttempt === 5) ? "Respuesta incierta" : "Respuesta correcta - simulación lograda";
 
-    function retryLevel() { resetGameplayState(); goTo('screen-2'); }
+        if (isCorrect) {
+            consecutiveWins++;
+            // Ajuste de probabilidad para Nivel 3 si se logra acierto
+            if(currentLevel === 3 && consecutiveWins === 1) probMoveLevel3 = 0.7; 
+
+            if (consecutiveWins >= 3) {
+                text.innerText = (currentLevel < 3) ? "¡Felicidades! Has pasado el nivel." : "¡Felicidades! Has completado el juego.";
+            } else {
+                text.innerText = "Lo lograste, estás un paso más cerca de alcanzar las 3 secuencias correctas.";
+            }
+        } else {
+            consecutiveWins = 0; 
+            if(currentLevel === 3) probMoveLevel3 = 0.4; // Reset prob en nivel 3 si falla racha
+            text.innerText = "Sigue intentando, recuerda que debes acertar 3 secuencias seguidas para poder avanzar al próximo nivel.";
+        }
+
+        nav.innerHTML = "";
+        let btn = document.createElement('img');
+        btn.className = "btn-footer";
+
+        if (consecutiveWins >= 3) {
+            if (currentLevel < 3) {
+                btn.src = "imgs/next-level.png";
+                btn.onclick = () => { currentLevel++; consecutiveWins = 0; startGameplay(); };
+            } else {
+                btn.src = "imgs/end.png";
+                btn.onclick = () => goTo('screen-5');
+            }
+        } else {
+            btn.src = "imgs/next-try.png";
+            btn.onclick = () => startGameplay();
+        }
+        nav.appendChild(btn);
+    }
 
     function resetGameplayState() {
-        attempts = 0; successfulSequences = 0; organismPos = 60;
-        isWaitingForB = false; isOrganic = false; moveDirection = 1;
-        clearTimeout(timerLevel2);
-        if(timerA) clearTimeout(timerA);
-        const org = document.getElementById('organism');
-        org.classList.remove('organic-shape');
-        org.style.left = '60px';
+        interactions = 0; hitsInCurrentAttempt = 0; organismPos = 60;
+        isWaitingForB = false; moveDirection = 1; gameActive = false;
+        clearTimeout(timerLevel);
+        clearTimeout(timerResponse);
+        document.getElementById('organism').style.left = '60px';
     }
+
+    function togglePopup(show) { document.getElementById('popup').style.display = show ? 'block' : 'none'; }
 </script>
 </body>
 </html>
