@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Simulador M2</title>
+    <style>
+        body { background: #282828; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        #sim-container { width: 550px; height: 340px; position: relative; overflow: hidden; border-radius: 15px; font-family: Arial, sans-serif; }
+        .screen { width: 100%; height: 100%; position: absolute; display: none; background-size: cover; }
+        .active { display: block; }
+        .btn { position: absolute; cursor: pointer; }
+        
+        #btn-start-1, #btn-restart { width: 250px; bottom: 1px; left: 150px; }
+        #btn-instr { bottom: -28px; left: 30px; }
+        #btn-start-2 { bottom: -28px; right: 50px; }
+        
+        #preview-area {
+            position: absolute; top: 40px; left: 20px; width: 500px; height: 205px;
+            background: url('imgs/preview.png') no-repeat center; background-size: cover;
+        }
+
+        #organism {
+            position: absolute; top: 50%; left: 60px; width: 50px; height: 50px;
+            background: url('imgs/bee_fly.png') no-repeat center;
+            background-size: contain;
+            transform: translateY(-50%); transition: left 0.5s ease;
+        }
+
+        #popup { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; z-index: 10; }
+
+        .triangle { display: inline-block; width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 14px solid #bbb; margin-left: 5px; vertical-align: middle; }
+        .tri-active { border-bottom-color: #00e2e0; }
+
+        #nav-btns { position: absolute; bottom: 1px; left: 150px; width: 250px; height: 60px; display: flex; justify-content: center; align-items: center; }
+        .btn-footer { width: 100%; cursor: pointer; transition: transform 0.2s; }
+        .btn-footer:hover { transform: scale(1.05); }
+
+        .bee { position: absolute; left: 0px; bottom: 0px; width: 200px; z-index: 2; }
+    </style>
+</head>
+<body>
+
+<div id="sim-container">
+    <!--Inicio-->
+    <div id="screen-1" class="screen active" style="background-image: url('imgs/bg-1.png');">
+        <img src="imgs/start.png" id="btn-start-1" class="btn" onclick="goTo('screen-2')">
+    </div>
+
+    <!--Instrucciones-->
+    <div id="screen-2" class="screen" style="background-image: url('imgs/bg-2.png');">
+        <img src="imgs/b-instruction.png" id="btn-instr" class="btn" onclick="togglePopup(true)">
+        <img src="imgs/b-start.png" id="btn-start-2" class="btn" onclick="startGameplay()">
+        <div id="popup">
+            <div style="position:relative; width:100%; height:100%; background: url('imgs/bg-2popup.png');">
+                <div style="position:absolute; top:20px; left:20px; width:500px; height:205px; background:url('imgs/popup-1.png') no-repeat center center; background-size: cover;">
+                    <p id="instr-text" style="padding:60px; font-size:12px; color: #fff;"></p>
+                </div>
+                <img src="imgs/b-close.png" class="btn" style="width:100px; top:5px; right:15px;" onclick="togglePopup(false)">
+            </div>
+        </div>
+    </div>
+
+    <!--Niveles-->
+    <div id="screen-3" class="screen" style="background-image: url('imgs/bg-3.png');">
+        <div id="preview-area"><div id="organism"></div></div>
+        <div id="controls">
+            <img src="imgs/b-a.png" id="btn-a" class="btn" style="bottom:-28px; left:45px;" onclick="pressA()">
+            <img src="imgs/b-b.png" id="btn-b" class="btn" style="bottom:-28px; right:50px;" onclick="pressB()">
+        </div>
+        <div id="status" style="position:absolute; top:13px; right:20px; color: #fff; font-size:14px; font-weight:bold;">Intentos: 0/10</div>
+        <div id="level-display" style="position:absolute; top:10px; left:20px; color: #fff; font-size:14px; font-weight: bold;">
+            Nivel <span id="lvl-num">1</span> | Serie: 
+            <span id="t1" class="triangle"></span><span id="t2" class="triangle"></span><span id="t3" class="triangle"></span>
+        </div>
+    </div>
+
+    <!--Niveles completados-->
+    <div id="screen-4" class="screen" style="background-image: url('imgs/bg-4.png');">
+        <img src="imgs/Bee_surprised.png" class="bee">
+        <div id="feedback-window" style="position:absolute; top:20px; left:20px; width:500px; height:205px; background:url('imgs/popup-1.png') no-repeat center center; background-size: cover;">
+            <h3 id="res-title" style="margin-top:60px; text-align:center; color: #fff;"></h3>
+            <p id="res-text" style="padding:10px 60px; font-size:12px; color: #fff; text-align:center;"></p>
+        </div>
+        <div id="nav-btns"></div>
+    </div>
+
+    <!--Final-->
+    <div id="screen-5" class="screen" style="background-image: url('imgs/bg-1.png');">
+        <img src="imgs/Bee_pink.png" class="bee">
+        <img src="imgs/re-start.png" id="btn-restart" class="btn" onclick="location.reload()">
+    </div>
+</div>
+
+<script>
+    let interactions = 0, hitsInCurrentAttempt = 0, organismPos = 60;
+    let currentLevel = 1, consecutiveWins = 0;
+    let isWaitingForB = false, moveDirection = 1, gameActive = false;
+    let timerLevel, timerResponse;
+    let probMoveLevel3 = 0.4;
+
+    const MIN_LIMIT = 60, MAX_LIMIT = 410;
+
+    function goTo(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+        if(screenId === 'screen-2') updateInstructions();
+    }
+
+    function updateInstructions() {
+        const p = document.getElementById('instr-text');
+        if(currentLevel === 1) p.innerText = "Nivel 1: Presiona A y luego B (antes de 1 segundo) para que el organismo avance.";
+        if(currentLevel === 2) p.innerText = "Nivel 2: El organismo avanza solo. Presiona B para confirmar el avance.";
+        if(currentLevel === 3) p.innerText = "Nivel 3: Presiona A. Si el organismo se mueve, presiona B rápido. A medida que aciertes, será más fácil controlarlo.";
+    }
+
+    function startGameplay() {
+        resetGameplayState();
+        goTo('screen-3');
+        updateLevelUI();
+        gameActive = true;
+        // Solo el Nivel 2 tiene ciclo automático de inicio
+        if(currentLevel === 2) autoMoveCycle();
+    }
+
+    function updateLevelUI() {
+        document.getElementById('lvl-num').innerText = currentLevel;
+        document.getElementById('status').innerText = `Intentos: ${interactions}/10`;
+        for(let i=1; i<=3; i++) {
+            document.getElementById('t'+i).className = i <= consecutiveWins ? 'triangle tri-active' : 'triangle';
+        }
+    }
+
+    function autoMoveCycle() {
+        if(!gameActive || interactions >= 10 || currentLevel !== 2) return;
+        timerLevel = setTimeout(() => { if(gameActive) triggerMove(); }, 1500);
+    }
+
+    function triggerMove() {
+        isWaitingForB = true;
+        moveOrganism(20); 
+        timerResponse = setTimeout(() => {
+            if(isWaitingForB) {
+                isWaitingForB = false;
+                registerInteraction(false);
+                if(currentLevel === 2 && interactions < 10) autoMoveCycle();
+            }
+        }, 1000);
+    }
+
+    function moveOrganism(px) {
+        let target = organismPos + (px * moveDirection);
+        if (target > MAX_LIMIT || target < MIN_LIMIT) {
+            moveDirection *= -1;
+            target = organismPos + (px * moveDirection);
+        }
+        organismPos = target;
+        document.getElementById('organism').style.left = organismPos + 'px';
+    }
+
+    function registerInteraction(isHit) {
+        if (interactions >= 10 || !gameActive) return;
+        interactions++;
+        if (isHit) {
+            hitsInCurrentAttempt++;
+            moveOrganism(10);
+        } else {
+            let back = organismPos - (10 * moveDirection);
+            organismPos = Math.max(MIN_LIMIT, Math.min(MAX_LIMIT, back));
+            document.getElementById('organism').style.left = organismPos + 'px';
+        }
+        updateLevelUI();
+        if (interactions >= 10) {
+            gameActive = false;
+            clearTimeout(timerLevel);
+            setTimeout(showResults, 800);
+        }
+    }
+
+    function pressA() {
+        if(!gameActive || isWaitingForB) return;
+
+        if(currentLevel === 1) {
+            isWaitingForB = true;
+            timerResponse = setTimeout(() => {
+                if(isWaitingForB) { isWaitingForB = false; registerInteraction(false); }
+            }, 1000);
+        } 
+        else if(currentLevel === 3) {
+            // Lógica Probabilidad Nivel 3:
+            // Racha 0 (1ra secuencia): probMoveLevel3 (base 0.4)
+            // Racha 1 (2da secuencia): probMoveLevel3 (aumentada en showResults)
+            // Racha 2 (3ra secuencia): A mueve directamente
+            if(consecutiveWins >= 2) {
+                registerInteraction(true); // A es suficiente
+            } else {
+                if(Math.random() < probMoveLevel3) triggerMove();
+                // Si no se mueve, no se espera respuesta (no cuenta interacción)
+            }
+        }
+    }
+
+    function pressB() {
+        if(!gameActive) return;
+        if(!isWaitingForB) {
+            registerInteraction(false);
+            return;
+        }
+        clearTimeout(timerResponse);
+        isWaitingForB = false;
+        registerInteraction(true);
+        if(currentLevel === 2 && interactions < 10) autoMoveCycle();
+    }
+
+    function showResults() {
+        goTo('screen-4');
+        const nav = document.getElementById('nav-btns');
+        const title = document.getElementById('res-title');
+        const text = document.getElementById('res-text');
+        
+        let isCorrect = (hitsInCurrentAttempt >= 6);
+        title.innerText = (hitsInCurrentAttempt <= 4) ? "Respuesta fallida" : (hitsInCurrentAttempt === 5) ? "Respuesta incierta" : "Respuesta correcta - simulación lograda";
+
+        if (isCorrect) {
+            consecutiveWins++;
+            // Ajuste de probabilidad para Nivel 3 si se logra acierto
+            if(currentLevel === 3 && consecutiveWins === 1) probMoveLevel3 = 0.7; 
+
+            if (consecutiveWins >= 3) {
+                text.innerText = (currentLevel < 3) ? "¡Felicidades! Has pasado el nivel." : "¡Felicidades! Has completado el juego.";
+            } else {
+                text.innerText = "Lo lograste, estás un paso más cerca de alcanzar las 3 secuencias correctas.";
+            }
+        } else {
+            consecutiveWins = 0; 
+            if(currentLevel === 3) probMoveLevel3 = 0.4; // Reset prob en nivel 3 si falla racha
+            text.innerText = "Sigue intentando, recuerda que debes acertar 3 secuencias seguidas para poder avanzar al próximo nivel.";
+        }
+
+        nav.innerHTML = "";
+        let btn = document.createElement('img');
+        btn.className = "btn-footer";
+
+        if (consecutiveWins >= 3) {
+            if (currentLevel < 3) {
+                btn.src = "imgs/next-level.png";
+                btn.onclick = () => { currentLevel++; consecutiveWins = 0; startGameplay(); };
+            } else {
+                btn.src = "imgs/end.png";
+                btn.onclick = () => goTo('screen-5');
+            }
+        } else {
+            btn.src = "imgs/next-try.png";
+            btn.onclick = () => startGameplay();
+        }
+        nav.appendChild(btn);
+    }
+
+    function resetGameplayState() {
+        interactions = 0; hitsInCurrentAttempt = 0; organismPos = 60;
+        isWaitingForB = false; moveDirection = 1; gameActive = false;
+        clearTimeout(timerLevel);
+        clearTimeout(timerResponse);
+        document.getElementById('organism').style.left = '60px';
+    }
+
+    function togglePopup(show) { document.getElementById('popup').style.display = show ? 'block' : 'none'; }
+</script>
+</body>
+</html>
