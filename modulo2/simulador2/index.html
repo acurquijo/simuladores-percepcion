@@ -108,9 +108,9 @@
 
     function updateInstructions() {
         const p = document.getElementById('instr-text');
-        if(currentLevel === 1) p.innerText = "Nivel 1: Presiona A y luego B (antes de 1 segundo) para que el organismo avance.";
-        if(currentLevel === 2) p.innerText = "Nivel 2: El organismo avanza solo. Presiona B para confirmar el avance.";
-        if(currentLevel === 3) p.innerText = "Nivel 3: Presiona A. Si el organismo se mueve, presiona B rápido. A medida que aciertes, será más fácil controlarlo.";
+        if(currentLevel === 1) p.innerHTML = "<strong>Nivel 1:</strong> <br>En este nivel, la actividad progresa únicamente cuando dos eventos se relacionan en una secuencia específica dentro de un intervalo muy breve. <br> No basta con que ocurran: es clave la precisión temporal entre ellos.";
+        if(currentLevel === 2) p.innerHTML = "<stron>Nivel 2:</strong><br>En este nivel, el cambio ocurre de manera independiente. <br> Existe una acción que permite reconocer ese momento, pero no lo produce.";
+        if(currentLevel === 3) p.innerHTML = "<strong>Nivel 3:</strong><br>En este nivel, una misma acción no siempre genera el mismo resultado. <br> Es necesario identificar cuándo ocurre el cambio relevante y ajustarse a ese momento. <br> A medida que se logra consistencia, la relación se vuelve más estable.";
     }
 
     function startGameplay() {
@@ -220,21 +220,60 @@
         let isCorrect = (hitsInCurrentAttempt >= 6);
         title.innerText = (hitsInCurrentAttempt <= 4) ? "Respuesta fallida" : (hitsInCurrentAttempt === 5) ? "Respuesta incierta" : "Respuesta correcta - simulación lograda";
 
+        // --- SISTEMA DE RETROALIMENTACIÓN DINÁMICA ---
+        let feedback = "";
+
         if (isCorrect) {
             consecutiveWins++;
-            // Ajuste de probabilidad para Nivel 3 si se logra acierto
-            if(currentLevel === 3 && consecutiveWins === 1) probMoveLevel3 = 0.7; 
+            if (currentLevel === 3 && consecutiveWins === 1) probMoveLevel3 = 0.7;
 
-            if (consecutiveWins >= 3) {
-                text.innerText = (currentLevel < 3) ? "¡Felicidades! Has pasado el nivel." : "¡Felicidades! Has completado el juego.";
-            } else {
-                text.innerText = "Lo lograste, estás un paso más cerca de alcanzar las 3 secuencias correctas.";
+            // Lógica por niveles y secuencias
+            if (currentLevel === 1) {
+                if (consecutiveWins < 3) {
+                    // [NIVEL 1: Acierto secuencia 1 o 2]
+                    feedback = "<strong>Correcto.</strong><br>La relación entre los eventos se mantuvo dentro del intervalo requerido. La secuencia no solo ocurrió, sino que se ajustó con precisión al tiempo necesario.";
+                } else {
+                    // [NIVEL 1: Acierto secuencia 3 - Final de nivel]
+                    feedback = "<strong>Nivel 1 superado.</strong><br>Se logró identificar correctamente qué organiza la actividad en este nivel.";
+                }
+            } 
+            else if (currentLevel === 2) {
+                if (consecutiveWins < 3) {
+                    // [NIVEL 2: Acierto secuencia 1 o 2]
+                    feedback = "<strong>Correcto.</strong><br>El cambio fue reconocido en el momento adecuado. La actividad no depende de una acción previa, sino de identificar cuándo ocurre.";
+                } else {
+                    // [NIVEL 2: Acierto secuencia 3 - Final de nivel]
+                    feedback = "<strong>Nivel 2 superado.</strong><br>Se logró identificar correctamente qué organiza la actividad en este nivel.";
+                }
+            } 
+            else if (currentLevel === 3) {
+                if (consecutiveWins < 3) {
+                    // [NIVEL 3: Acierto secuencia 1 o 2]
+                    feedback = "<strong>Correcto.</strong><br>La respuesta se ajustó solo cuando ocurrió el cambio relevante. Se está identificando que la relación no es constante, sino variable.";
+                } else {
+                    // [NIVEL 3: Acierto secuencia 3 - Final del juego]
+                    feedback = "<strong>Nivel 3 superado.</strong><br>Se logró identificar correctamente qué organiza la actividad en este nivel.";
+                }
             }
         } else {
-            consecutiveWins = 0; 
-            if(currentLevel === 3) probMoveLevel3 = 0.4; // Reset prob en nivel 3 si falla racha
-            text.innerText = "Sigue intentando, recuerda que debes acertar 3 secuencias seguidas para poder avanzar al próximo nivel.";
+            // --- RETROALIMENTACIÓN INCORRECTA ---
+            consecutiveWins = 0;
+            if (currentLevel === 3) probMoveLevel3 = 0.4;
+
+            if (currentLevel === 1) {
+                // [NIVEL 1: Error]
+                feedback = "<strong>Aún no.</strong><br>La relación entre los eventos no se mantuvo dentro del intervalo requerido. Es necesario mayor precisión en el momento en que ocurren.";
+            } else if (currentLevel === 2) {
+                // [NIVEL 2: Error]
+                feedback = "<strong>Inténtalo de nuevo.</strong><br>El cambio no depende de una acción previa. Es importante identificar cuándo ocurre, no intentar provocarlo.";
+            } else if (currentLevel === 3) {
+                // [NIVEL 3: Error]
+                feedback = "<sstrong>Aún no.</strong><br>La relación no es constante en este nivel. No todas las acciones producen el mismo efecto.";
+            }
         }
+
+        text.innerHTML = feedback; // Usamos innerHTML por si quieres usar <br>
+        // ----------------------------------------------
 
         nav.innerHTML = "";
         let btn = document.createElement('img');
