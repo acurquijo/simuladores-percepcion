@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Ilusión 5</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --primary: #162593;
+    --accent: #00e2e0;
+    --track-bg: #d1d1d1;
+    --bg-sim: #f8f9fa;
+  }
+
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+  }
+
+  .container {
+    background: #ececec;
+    padding: 20px 30px;
+    border-radius: 20px;
+    width: 550px;
+    height: 340px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: row; 
+    align-items: center;
+    gap: 25px;
+  }
+
+  .canvas-area {
+    background: var(--bg-sim);
+    width: 260px;
+    height: 260px;
+    border-radius: 15px;
+    position: relative;
+    border: 1px solid #ddd;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .controls {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .val-display {
+    color: var(--primary);
+  }
+
+  input[type="range"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 100%;
+    height: 10px;
+    background: var(--track-bg);
+    border-radius: 50px;
+    outline: none;
+    background-image: linear-gradient(to right, var(--accent), var(--primary));
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    appearance: none;
+    -webkit-appearance: none;
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+    background: var(--primary);
+    cursor: pointer;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  }
+
+  button {
+    padding: 12px;
+    border-radius: 10px;
+    border: none;
+    background: var(--primary);
+    color: white;
+    font-family: 'Poppins', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  button:hover {
+    filter: brightness(1.2);
+  }
+
+  /* 1. Modificado el estilo del botón cuando NO es active */
+  button.active {
+    background: #333;
+    color: #fff;
+  }
+
+  .line {
+    stroke: #ccc;
+    stroke-width: 1;
+    transition: opacity 0.3s;
+  }
+
+  .dot {
+    fill: var(--primary);
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="canvas-area">
+    <svg id="simSvg" viewBox="0 0 200 200">
+      <circle cx="100" cy="100" r="95" fill="none" stroke="#eee" stroke-width="2" />
+      <g id="linesGroup"></g>
+      <g id="dotsGroup"></g>
+    </svg>
+  </div>
+
+  <div class="controls">
+    <div class="control-group">
+      <label>
+        Círculos visibles
+        <span class="val-display" id="countLabel">8</span>
+      </label>
+      <input type="range" id="circleSlider" min="1" max="8" value="8">
+    </div>
+
+    <button id="toggleLines">Mostrar trayectorias</button>
+  </div>
+</div>
+
+<script>
+  const svg = document.getElementById('simSvg');
+  const linesGroup = document.getElementById('linesGroup');
+  const dotsGroup = document.getElementById('dotsGroup');
+  const circleSlider = document.getElementById('circleSlider');
+  const countLabel = document.getElementById('countLabel');
+  const toggleLines = document.getElementById('toggleLines');
+
+  const centerX = 100;
+  const centerY = 100;
+  const radius = 80;
+  let time = 0;
+  
+  // 3. Cambiamos la variable inicial a false
+  let showLines = false;
+
+  function init() {
+    for (let i = 0; i < 8; i++) {
+      const angle = (i * Math.PI) / 8;
+      const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      line.setAttribute("class", "line");
+      line.setAttribute("x1", centerX + Math.cos(angle) * radius);
+      line.setAttribute("y1", centerY + Math.sin(angle) * radius);
+      line.setAttribute("x2", centerX - Math.cos(angle) * radius);
+      line.setAttribute("y2", centerY - Math.sin(angle) * radius);
+      line.id = `line-${i}`;
+      linesGroup.appendChild(line);
+
+      const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      dot.setAttribute("class", "dot");
+      dot.setAttribute("r", "5");
+      dot.id = `dot-${i}`;
+      dotsGroup.appendChild(dot);
+    }
+  }
+
+  function animate() {
+    time += 0.03;
+    const count = parseInt(circleSlider.value);
+
+    for (let i = 0; i < 8; i++) {
+      const dot = document.getElementById(`dot-${i}`);
+      const line = document.getElementById(`line-${i}`);
+      
+      if (i < count) {
+        dot.style.display = "block";
+        line.style.opacity = showLines ? "1" : "0";
+        
+        const angle = (i * Math.PI) / 8;
+        const offset = i * (Math.PI / 8);
+        const dist = Math.sin(time + offset) * radius;
+        
+        const x = centerX + Math.cos(angle) * dist;
+        const y = centerY + Math.sin(angle) * dist;
+        
+        dot.setAttribute("cx", x);
+        dot.setAttribute("cy", y);
+      } else {
+        dot.style.display = "none";
+        line.style.opacity = "0";
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+
+  circleSlider.addEventListener('input', (e) => {
+    countLabel.textContent = e.target.value;
+    const percent = ((e.target.value - 1) / (8 - 1)) * 100;
+    e.target.style.backgroundSize = percent + '% 100%';
+  });
+
+  toggleLines.addEventListener('click', () => {
+    showLines = !showLines;
+    toggleLines.textContent = showLines ? "Ocultar trayectorias" : "Mostrar trayectorias";
+    toggleLines.classList.toggle('active');
+  });
+
+  init();
+  animate();
+  circleSlider.style.backgroundSize = '100% 100%';
+</script>
+
+</body>
+</html>

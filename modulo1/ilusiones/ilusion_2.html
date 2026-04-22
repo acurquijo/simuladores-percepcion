@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Ilusión 2</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary-blue: #162593;
+      --light-cyan: #00e2e0;
+      --bg-panel: #ececec;
+      --bg-preview: #ffffff;
+      --text-color: #2c3e50;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #ffffff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      color: var(--text-color);
+    }
+
+    /* PANEL DE VISUALIZACIÓN: 550 x 340 px */
+    .wrapper {
+      width: 550px;
+      height: 340px;
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-panel);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    }
+
+    /* ESCENA (Área de visualización) */
+    .scene {
+      position: relative;
+      height: 140px; /* Ajustado para dar espacio a los controles */
+      margin: 20px;
+      border-radius: 12px;
+      background: var(--bg-preview);
+      border: 1px solid #ddd;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Cuadro interno FIJO */
+    .inner-box {
+      width: 60px;
+      height: 60px;
+      background-color: #808080; /* Gris medio fijo */
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      z-index: 2;
+    }
+
+    /* CONTROLES */
+    .controls {
+      flex-grow: 1;
+      background: var(--bg-panel);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 0 40px;
+    }
+
+    .panel-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: var(--primary-blue);
+      text-align: center;
+    }
+
+    .slider-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .slider-item {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .slider-item label {
+      font-size: 15px;
+      font-weight: 600;
+      width: 50px;
+    }
+
+    /* SLIDER ESTILIZADO */
+    input[type=range] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 12px;
+      border-radius: 50px;
+      background: #ddd;
+      outline: none;
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--primary-blue);
+      cursor: pointer;
+      border: 2px solid #fff;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    /* Colores específicos para los thumbs de los sliders */
+    #bgR { accent-color: #ff4d4d; }
+    #bgG { accent-color: #2ecc71; }
+    #bgB { accent-color: #3498db; }
+
+  </style>
+</head>
+<body>
+
+<div class="wrapper">
+  <div class="scene" id="backgroundArea">
+    <div class="inner-box"></div>
+  </div>
+
+  <div class="controls">
+    <div class="panel-title">Color de fondo (RGB)</div>
+    
+    <div class="slider-group">
+      <div class="slider-item">
+        <label>Rojo</label>
+        <input type="range" id="bgR" min="0" max="255" value="200">
+      </div>
+      <div class="slider-item">
+        <label>Verde</label>
+        <input type="range" id="bgG" min="0" max="255" value="200">
+      </div>
+      <div class="slider-item">
+        <label>Azul</label>
+        <input type="range" id="bgB" min="0" max="255" value="200">
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const bgArea = document.getElementById("backgroundArea");
+  const bgR = document.getElementById("bgR");
+  const bgG = document.getElementById("bgG");
+  const bgB = document.getElementById("bgB");
+
+  function updateColors() {
+    const r = bgR.value;
+    const g = bgG.value;
+    const b = bgB.value;
+    
+    // Actualiza el fondo de la escena
+    bgArea.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+
+    // Actualiza el degradado visual de los sliders para mayor estética
+    updateSliderGradient(bgR, r, '#ff4d4d');
+    updateSliderGradient(bgG, g, '#2ecc71');
+    updateSliderGradient(bgB, b, '#3498db');
+  }
+
+  function updateSliderGradient(el, val, color) {
+    const percent = (val / 255) * 100;
+    el.style.background = `linear-gradient(90deg, ${color} 0%, ${color} ${percent}%, #ddd ${percent}%)`;
+  }
+
+  [bgR, bgG, bgB].forEach(slider => {
+    slider.addEventListener("input", updateColors);
+  });
+
+  // Inicializar
+  updateColors();
+</script>
+
+</body>
+</html>

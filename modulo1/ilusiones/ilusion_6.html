@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Ilusión 6</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --primary-blue: #162593;
+    --light-cyan: #00e2e0;
+    --bg-panel: #ececec;
+    --bg-preview: #f8f9fa;
+  }
+
+  body {
+    margin: 0;
+    background: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-family: 'Poppins', sans-serif;
+  }
+
+  .wrapper {
+    width: 550px;
+    height: 340px;
+    background: var(--bg-panel);
+    border-radius: 20px;
+    padding: 25px 35px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+  }
+
+  .scene {
+    position: relative;
+    height: 190px; 
+    border-radius: 12px;
+    background: var(--bg-preview);
+    border: 1px solid #ddd;
+    overflow: hidden;
+  }
+
+  canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .controls {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 10px 0 0 0;
+  }
+
+  .label-container {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    color: #444;
+  }
+
+  #valDisplay {
+    color: var(--primary-blue);
+    font-weight: bold;
+  }
+
+  input[type=range] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 12px;
+    border-radius: 50px;
+    background: #ddd;
+    outline: none;
+    background-image: linear-gradient(to right, var(--light-cyan), var(--primary-blue));
+    background-repeat: no-repeat;
+  }
+
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--primary-blue);
+    cursor: pointer;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  }
+</style>
+</head>
+<body>
+
+<div class="wrapper">
+  <div class="scene">
+    <canvas id="glCanvas"></canvas>
+  </div>
+
+  <div class="controls">
+    <div class="label-container">
+      Ondulación <span id="valDisplay">0%</span>
+    </div>
+    <input type="range" id="amplitude" min="0" max="0.032" step="0.0001" value="0.016">
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById("glCanvas");
+const gl = canvas.getContext("webgl");
+const ampSlider = document.getElementById("amplitude");
+const valDisplay = document.getElementById("valDisplay");
+
+const vertexShaderSource = `
+  attribute vec2 a_position;
+  varying vec2 v_texCoord;
+  void main(){
+    v_texCoord = (a_position + 1.0) * 0.5;
+    v_texCoord.y = 1.0 - v_texCoord.y; 
+    gl_Position = vec4(a_position, 0, 1);
+  }
+`;
+
+const fragmentShaderSource = `
+  precision mediump float;
+  uniform sampler2D u_image;
+  uniform float u_time;
+  uniform float u_amplitude;
+  uniform vec2 u_resRatio; 
+  varying vec2 v_texCoord;
+  void main(){
+    vec2 uv = (v_texCoord - 0.5) * u_resRatio + 0.5;
+    uv = (uv - 0.5) / 1.05 + 0.5; 
+    
+    float wave = sin(uv.y * 12.0 + u_time) * u_amplitude;
+    float wave2 = cos(uv.x * 10.0 + u_time * 0.8) * u_amplitude;
+    
+    uv.x += wave;
+    uv.y += wave2;
+    
+    gl_FragColor = texture2D(u_image, uv);
+  }
+`;
+
+function createShader(gl, type, source) {
+  const shader = gl.createShader(type);
+  gl.shaderSource(shader, source);
+  gl.compileShader(shader);
+  return shader;
+}
+
+const program = gl.createProgram();
+gl.attachShader(program, createShader(gl, gl.VERTEX_SHADER, vertexShaderSource));
+gl.attachShader(program, createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource));
+gl.linkProgram(program);
+gl.useProgram(program);
+
+const positionBuffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, -1,1, 1,-1, 1,1]), gl.STATIC_DRAW);
+const posLoc = gl.getAttribLocation(program, "a_position");
+gl.enableVertexAttribArray(posLoc);
+gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+
+const texture = gl.createTexture();
+const image = new Image();
+image.crossOrigin = "anonymous"; 
+image.src = "https://acurquijo.github.io/simuladores-percepcion/alex-grey-image1.jpg";
+
+let imgAspect = 1172 / 725;
+const resRatioLoc = gl.getUniformLocation(program, "u_resRatio");
+
+image.onload = () => {
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+  render();
+};
+
+const timeLoc = gl.getUniformLocation(program, "u_time");
+const ampLoc = gl.getUniformLocation(program, "u_amplitude");
+
+function updateSlider() {
+  const ratio = (ampSlider.value - ampSlider.min) / (ampSlider.max - ampSlider.min);
+  ampSlider.style.backgroundSize = (ratio * 100) + '% 100%';
+  // Muestra el valor de 0 a 100 con el símbolo de %
+  valDisplay.textContent = Math.round(ratio * 100) + "%";
+}
+
+let time = 0;
+function render() {
+  time += 0.02;
+  
+  if (canvas.width !== canvas.clientWidth || canvas.height !== canvas.clientHeight) {
+    canvas.width = canvas.clientWidth;
+    canvas.height = canvas.clientHeight;
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    
+    let canvasAspect = canvas.width / canvas.height;
+    let ratioX = 1.0;
+    let ratioY = 1.0;
+
+    if (canvasAspect > imgAspect) {
+        ratioY = imgAspect / canvasAspect;
+    } else {
+        ratioX = canvasAspect / imgAspect;
+    }
+    gl.uniform2f(resRatioLoc, ratioX, ratioY);
+  }
+
+  gl.uniform1f(timeLoc, time);
+  gl.uniform1f(ampLoc, parseFloat(ampSlider.value));
+  gl.drawArrays(gl.TRIANGLES, 0, 6);
+  requestAnimationFrame(render);
+}
+
+ampSlider.addEventListener("input", updateSlider);
+updateSlider();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Ilusión 4</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --primary: #162593;
+    --accent: #00e2e0;
+    --track-bg: #ddd;
+    --bg-panel: #ececec;
+  }
+
+  body {
+    margin: 0;
+    background: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-family: 'Poppins', sans-serif;
+  }
+
+  /* PANEL DE VISUALIZACIÓN: 550 x 340 px */
+  .wrapper {
+    width: 550px;
+    height: 340px;
+    background: var(--bg-panel);
+    border-radius: 20px;
+    padding: 25px 35px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+  }
+
+  .scene {
+    position: relative;
+    height: 110px;
+    border-radius: 12px;
+    background: #f8f9fa;
+    border: 1px solid #eee;
+    overflow: hidden;
+  }
+
+  .dot {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--primary);
+    display: none;
+    box-shadow: 0 0 15px rgba(22, 37, 147, 0.2);
+  }
+
+  .controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  label {
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .value-display {
+    color: var(--primary);
+  }
+
+  input[type="range"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 100%;
+    height: 12px;
+    background: var(--track-bg);
+    border-radius: 50px;
+    outline: none;
+    background-image: linear-gradient(to right, var(--accent), var(--primary));
+    background-repeat: no-repeat;
+    background-size: 0% 100%;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    appearance: none;
+    -webkit-appearance: none;
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+    background: var(--primary);
+    cursor: pointer;
+    border: 2px solid #fff;
+  }
+
+  /* BOTÓN TOGGLE */
+  .btn-toggle {
+    background: #bbb;
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 10px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 5px;
+  }
+
+  .btn-toggle.active {
+    background: var(--primary);
+    box-shadow: 0 4px 10px rgba(22, 37, 147, 0.3);
+  }
+
+  /*
+  .btn-toggle.active::after {
+    content: " (ACTIVADA)";
+  }
+    */
+</style>
+</head>
+
+<body>
+
+<div class="wrapper">
+  <div class="scene" id="sceneContainer">
+    <div class="dot" id="dotA"></div>
+    <div class="dot" id="dotB"></div>
+  </div>
+
+  <div class="controls">
+    <div class="control-group">
+      <label>Intervalo Δt <span class="value-display" id="dtVal">150 ms</span></label>
+      <input type="range" min="30" max="500" value="150" id="dtSlider">
+    </div>
+
+    <div class="control-group">
+      <label>Distancia Δx <span class="value-display" id="dxVal">120 px</span></label>
+      <input type="range" min="20" max="320" value="120" id="dxSlider">
+    </div>
+
+    <button class="btn-toggle" id="toggleSim">Simultaneidad: OFF</button>
+  </div>
+</div>
+
+<script>
+const dotA = document.getElementById("dotA");
+const dotB = document.getElementById("dotB");
+const dtSlider = document.getElementById("dtSlider");
+const dxSlider = document.getElementById("dxSlider");
+const dtVal = document.getElementById("dtVal");
+const dxVal = document.getElementById("dxVal");
+const toggleBtn = document.getElementById("toggleSim");
+const container = document.getElementById("sceneContainer");
+
+let isSimultaneous = false;
+let loopTimeout;
+
+function updateSliderStyle(slider) {
+  const percentage = ((slider.value - slider.min) / (slider.max - slider.min)) * 100;
+  slider.style.backgroundSize = percentage + '% 100%';
+}
+
+function positionDots() {
+  const dx = parseInt(dxSlider.value);
+  const center = container.offsetWidth / 2;
+  dotA.style.left = (center - dx / 2 - 12) + "px";
+  dotB.style.left = (center + dx / 2 - 12) + "px";
+}
+
+function runLoop() {
+  clearTimeout(loopTimeout);
+  const dt = parseInt(dtSlider.value);
+
+  if (isSimultaneous) {
+    // Modo Simultáneo: Ambos se encienden y apagan al mismo tiempo
+    dotA.style.display = "block";
+    dotB.style.display = "block";
+
+    loopTimeout = setTimeout(() => {
+      dotA.style.display = "none";
+      dotB.style.display = "none";
+      
+      loopTimeout = setTimeout(runLoop, dt);
+    }, dt);
+
+  } else {
+    // Modo Alterno (Phi): Uno después del otro
+    dotA.style.display = "block";
+    dotB.style.display = "none";
+
+    loopTimeout = setTimeout(() => {
+      dotA.style.display = "none";
+      dotB.style.display = "block";
+      
+      loopTimeout = setTimeout(() => {
+        dotB.style.display = "none";
+        loopTimeout = setTimeout(runLoop, dt);
+      }, dt);
+    }, dt);
+  }
+}
+
+// Eventos Sliders
+[dtSlider, dxSlider].forEach(slider => {
+  updateSliderStyle(slider);
+  slider.addEventListener("input", () => {
+    updateSliderStyle(slider);
+    positionDots();
+    dtVal.textContent = dtSlider.value + " ms";
+    dxVal.textContent = dxSlider.value + " px";
+  });
+});
+
+// Evento Toggle
+toggleBtn.addEventListener("click", () => {
+  isSimultaneous = !isSimultaneous;
+  toggleBtn.classList.toggle("active", isSimultaneous);
+  toggleBtn.textContent = isSimultaneous ? "Simultaneidad: ON" : "Simultaneidad: OFF";
+  runLoop(); // Reiniciar el bucle con la nueva lógica
+});
+
+// Inicialización
+positionDots();
+runLoop();
+</script>
+
+</body>
+</html>

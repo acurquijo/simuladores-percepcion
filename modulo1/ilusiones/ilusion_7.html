@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Ilusión 7</title>
+
+<style>
+  :root {
+    --primary: #162593;
+    --accent: #00e2e0;
+    --track-bg: #e0e0e0;
+    --dark: #333;
+  }
+
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+  }
+
+  .container {
+    background: #ececec;
+    padding: 30px 40px;
+    border-radius: 20px;
+    width: 550px;
+    height: 340px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 15px; /* Espacio entre elementos */
+  }
+
+  .control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 30px;
+  }
+
+  label {
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  input[type="range"] {
+    appearance: none;
+    width: 100%;
+    height: 12px;
+    background: var(--track-bg);
+    border-radius: 10px;
+    outline: none;
+    background-image: linear-gradient(to right, var(--accent), var(--primary));
+    background-repeat: no-repeat;
+    background-size: 50% 100%;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    height: 24px;
+    width: 24px;
+    border-radius: 50%;
+    background: var(--primary);
+    cursor: pointer;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  }
+
+  /* Contenedor de botones en columna */
+  .button-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+  }
+
+  button {
+    padding: 12px;
+    border-radius: 12px;
+    border: none;
+    background: var(--primary);
+    color: white;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    width: 100%; /* Asegura que ocupen todo el ancho disponible */
+  }
+
+  button:hover {
+    filter: brightness(1.2);
+  }
+
+  button.active {
+    background: var(--dark);
+  }
+
+  span.value-display {
+    color: var(--primary);
+    font-size: 14px;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <div class="control-group">
+    <label>
+      Velocidad sonido
+      <span class="value-display" id="intervalVal">1000 ms</span>
+    </label>
+    <input type="range" min="300" max="2000" value="1000" id="intervalSlider">
+  </div>
+
+  <div class="button-stack">
+    <button id="metroBtn">Iniciar Metrónomo</button>
+    <button id="bellBtn">Iniciar sonido</button>
+  </div>
+</div>
+
+<audio id="metronome" src="sound/metronome.mp3"></audio>
+<audio id="bell" src="sound/bell.mp3"></audio>
+
+<script>
+  const metronomeAudio = document.getElementById("metronome");
+  const bellAudio = document.getElementById("bell");
+  const intervalSlider = document.getElementById("intervalSlider");
+  const intervalVal = document.getElementById("intervalVal");
+  
+  const metroBtn = document.getElementById("metroBtn");
+  const bellBtn = document.getElementById("bellBtn");
+
+  let bellLoop = null;
+  let bellPlaying = false;
+  let metroPlaying = false;
+
+  function updateSliderBackground(slider) {
+    const percentage = (slider.value - slider.min) * 100 / (slider.max - slider.min);
+    slider.style.backgroundSize = percentage + '% 100%';
+  }
+
+  updateSliderBackground(intervalSlider);
+  intervalSlider.addEventListener("input", () => {
+    updateSliderBackground(intervalSlider);
+    intervalVal.textContent = intervalSlider.value + " ms";
+    if (bellPlaying) {
+      stopBell();
+      startBell();
+    }
+  });
+
+  metroBtn.addEventListener("click", () => {
+    metroPlaying = !metroPlaying;
+    if (metroPlaying) {
+      metronomeAudio.currentTime = 0;
+      metronomeAudio.loop = true;
+      metronomeAudio.play();
+      metroBtn.textContent = "Pausar Metrónomo";
+      metroBtn.classList.add("active");
+    } else {
+      metronomeAudio.pause();
+      metroBtn.textContent = "Iniciar Metrónomo";
+      metroBtn.classList.remove("active");
+    }
+  });
+
+  function playBellOnce() {
+    bellAudio.currentTime = 0;
+    bellAudio.play();
+  }
+
+  function startBell() {
+    playBellOnce();
+    bellLoop = setInterval(playBellOnce, intervalSlider.value);
+  }
+
+  function stopBell() {
+    clearInterval(bellLoop);
+    bellLoop = null;
+  }
+
+  bellBtn.addEventListener("click", () => {
+    bellPlaying = !bellPlaying;
+    if (bellPlaying) {
+      startBell();
+      bellBtn.textContent = "Detener Campana";
+      bellBtn.classList.add("active");
+    } else {
+      stopBell();
+      bellBtn.textContent = "Iniciar Campana";
+      bellBtn.classList.remove("active");
+    }
+  });
+
+  metronomeAudio.onended = () => {
+    metroPlaying = false;
+    metroBtn.textContent = "Iniciar Metrónomo";
+    metroBtn.classList.remove("active");
+  };
+</script>
+
+</body>
+</html>
