@@ -29,6 +29,24 @@
             position: absolute; top: 80px; left: 50px; width: 967px; height: 380px;
             background: url('imgs/preview.png') no-repeat center; background-size: cover;
             border-radius: 10px;
+            display: flex;
+            align-items: center; /* Centra la meta verticalmente */
+        }
+
+        /* LÍNEA DE META */
+        #finish-line {
+            position: absolute;
+            right: 100px; /* Margen respecto al borde derecho */
+            width: 40px;
+            height: 80%; /* 80% del alto del contenedor */
+            background-color: #fff;
+            /* Patrón de cuadros tipo ajedrez */
+            background-image: 
+                conic-gradient(#000 0.25turn, transparent 0 0.5turn, #000 0.5turn 0.75turn, transparent 0);
+            background-size: 20px 20px;
+            border: 2px solid #fff;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            z-index: 1;
         }
 
         #organism {
@@ -36,74 +54,54 @@
             background: url('imgs/Bee_fly.png') no-repeat center;
             background-size: contain;
             transform: translateY(-50%); transition: left 0.5s ease;
+            z-index: 2; /* Por encima de la meta */
         }
 
         #popup { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; z-index: 10; }
 
-        /*Indicador de Serie*/
         .dot { 
             display: inline-block; 
             width: 20px; 
             height: 20px; 
-            background-color: #bbb; /* Color gris por defecto */
-            border-radius: 50%;     /* Esto lo hace círculo */
+            background-color: #bbb; 
+            border-radius: 50%;
             margin-left: 10px; 
             vertical-align: middle; 
-            transition: background-color 0.3s ease; /* Transición suave de color */
+            transition: background-color 0.3s ease; 
         }
 
         .dot-active { 
             background-color: #00e2e0; 
-            box-shadow: 0 0 10px #00e2e0; /* Opcional: un pequeño brillo */
+            box-shadow: 0 0 10px #00e2e0; 
         }
 
         #nav-btns { position: absolute; bottom: 30px; left: 358px; width: 350px; height: 70px; display: flex; justify-content: center; align-items: center; }
         .btn-footer { width: 100%; cursor: pointer; }
 
         .bee { position: absolute; left: 30px; bottom: 15px; width: 300px; z-index: 2; animation: float 3s ease-in-out infinite; }
-        /* Definimos el movimiento: sube y baja 10px */
+        
         @keyframes float {
-            0% {
-                transform: translateY(0px);
-            }
-            50% {
-                transform: translateY(-15px); /* Sube un poco */
-            }
-            100% {
-                transform: translateY(0px);
-            }
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+            100% { transform: translateY(0px); }
         }
 
         #status { position: absolute; top: 25px; right: 40px; color: #fff; font-size: 25px; font-weight: bold; }
         #level-display { position: absolute; top: 20px; left: 40px; color: #fff; font-size: 20px; font-weight: bold; }
         
-        #btn-a { width: 324px; bottom: -28px; left: 93px; }
-        #btn-b { width: 324px; bottom: -30px; right: 95px; }
+        #btn-a { width: 324px; bottom: -101px; left: 95px; }
+        #btn-b { width: 324px; bottom: -106px; right: 97px; }
 
-        /* Cuadro de preview final */
         #final-preview {
-            position: absolute;
-            top: 20px;
-            left: 146px;
-            width: 800px;
-            height: 380px;
+            position: absolute; top: 20px; left: 146px; width: 800px; height: 380px;
             background: url('imgs/preview.png') no-repeat center;
-            background-size: cover;
-            border-radius: 10px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            background-size: cover; border-radius: 10px;
+            display: flex; justify-content: center; align-items: center;
         }
 
-        /* Estilo del texto dentro del preview */
         #final-text {
-            padding: 60px 100px;
-            font-size: 18px;
-            color: #000;
-            text-align: center;
-            line-height: 1;
-            font-family: 'Poppins', sans-serif;
-            margin: 0;
+            padding: 60px 100px; font-size: 18px; color: #000; text-align: center;
+            line-height: 1; font-family: 'Poppins', sans-serif; margin: 0;
         }
     </style>
 </head>
@@ -128,7 +126,9 @@
     </div>
 
     <div id="screen-3" class="screen" style="background-image: url('imgs/bg-3.png');">
-        <div id="preview-area"><div id="organism"></div></div>
+        <div id="preview-area">
+            <div id="finish-line"></div> <div id="organism"></div>
+        </div>
         <div id="controls">
             <img src="imgs/b-a.png" id="btn-a" class="btn" onclick="pressA()">
             <img src="imgs/b-b.png" id="btn-b" class="btn" onclick="pressB()">
@@ -150,33 +150,29 @@
     </div>
 
     <div id="screen-5" class="screen" style="background-image: url('imgs/bg-5.png');">
-    <img src="imgs/Bee_pink.png" class="bee">
-    
-    <div id="final-preview">
-        <p id="final-text">
-            Has experimentado cómo una actividad puede organizarse de distintas maneras según las condiciones presentes.
-            <br><br>
-            En algunos casos, depende de la relación precisa entre eventos; en otros, de reconocer cuándo ocurre un cambio; y en otros, de ajustarse a variaciones en los resultados.
-            <br><br>
-            Distinguir estas diferencias es fundamental para comprender cómo se estructura el comportamiento en diferentes situaciones.
-        </p>
+        <img src="imgs/Bee_pink.png" class="bee">
+        <div id="final-preview">
+            <p id="final-text">
+                Has experimentado cómo una actividad puede organizarse de distintas maneras según las condiciones presentes.
+                <br><br>
+                Distinguir estas diferencias es fundamental para comprender cómo se estructura el comportamiento en diferentes situaciones.
+            </p>
+        </div>
+        <img src="imgs/re-start.png" id="btn-restart" class="btn" onclick="location.reload()">
     </div>
-
-    <img src="imgs/re-start.png" id="btn-restart" class="btn" onclick="location.reload()">
-</div>
 </div>
 
 <script>
     let interactions = 0, hitsInCurrentAttempt = 0;
-    let organismPos = 50;
+    let organismPos = 80;
     let currentLevel = 1, consecutiveWins = 0;
     let isWaitingForB = false, gameActive = false;
     let timerLevel, timerResponse;
     let probMoveLevel3 = 0.4;
 
-    const MIN_LIMIT = 50; 
-    const MAX_LIMIT = 850; // Abeja se mantiene dentro del área visible
-    const MOVE_STEP = 20;  // Avanza exactamente 20px
+    const MIN_LIMIT = 80; 
+    const MAX_LIMIT = 850; 
+    const MOVE_STEP = 20;
 
     function goTo(screenId) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -225,10 +221,8 @@
     }
 
     function moveOrganism(px) {
-        // Solo avanza a la derecha y respeta el límite máximo
         let target = organismPos + px;
         if (target > MAX_LIMIT) target = MAX_LIMIT;
-        
         organismPos = target;
         document.getElementById('organism').style.left = organismPos + 'px';
     }
@@ -240,7 +234,6 @@
             hitsInCurrentAttempt++;
             moveOrganism(MOVE_STEP);
         } else {
-            // No retrocede (punto 2), se mantiene en el lugar
             document.getElementById('organism').style.left = organismPos + 'px';
         }
         updateLevelUI();
