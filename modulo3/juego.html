@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Ritmo Simulator - Diamante Eléctrico</title>
+    <style>
+        body { background: #111; color: white; font-family: 'Poppins', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; }
+        
+        #game-container { position: relative; width: 360px; height: 500px; background: #222; border: 4px solid #00ffcc; display: none; overflow: hidden; }
+        
+        .lane { position: absolute; width: 90px; height: 100%; border-right: 1px solid #333; box-sizing: border-box; }
+        
+        .tile { 
+            position: absolute; width: 80px; height: 80px; background: #00ffcc; 
+            border-radius: 10px; display: flex; align-items: center; justify-content: center; 
+            font-weight: bold; color: #000; font-size: 28px; box-shadow: 0 0 15px #00ffcc;
+        }
+
+        .hit-zone { 
+            position: absolute; bottom: 0; width: 100%; height: 100px; 
+            background: rgba(0, 255, 204, 0.15); border-top: 3px dashed #00ffcc; 
+        }
+
+        .menu, .pause-overlay { text-align: center; z-index: 10; }
+        
+        button { padding: 15px 30px; font-size: 18px; cursor: pointer; background: #00ffcc; border: none; border-radius: 8px; font-weight: bold; transition: 0.2s; }
+        button:hover { background: #fff; transform: scale(1.05); }
+
+        #score-board { font-size: 24px; margin-bottom: 10px; color: #00ffcc; }
+    </style>
+</head>
+<body>
+
+    <div id="menu" class="menu">
+        <h1>QUÉ BONITO ES LO BONITO</h1>
+        <p>Selecciona dificultad:</p>
+        <select id="diff-select" style="padding:10px; border-radius:5px; margin-bottom: 20px;">
+            <option value="normal">NORMAL (Velocidad x1)</option>
+            <option value="hard">DIFÍCIL (Velocidad x2)</option>
+        </select>
+        <br>
+        <button onclick="initGame()">INICIAR JUEGO</button>
+    </div>
+
+    <div id="game-ui" style="display:none;">
+        <div id="score-board">PUNTOS: <span id="scoreVal">0</span></div>
+        <div id="game-container">
+            <div class="lane" style="left:0"></div>
+            <div class="lane" style="left:90px"></div>
+            <div class="lane" style="left:180px"></div>
+            <div class="lane" style="left:270px"></div>
+            <div class="hit-zone"></div>
+        </div>
+        <div style="margin-top:20px; text-align: center;">
+            <button onclick="togglePause()" id="pauseBtn">PAUSAR</button>
+        </div>
+    </div>
+
+    <audio id="bgMusic" src="musica.mp3"></audio>
+
+    <script>
+        let score = 0;
+        let gameActive = false;
+        let speed = 5;
+        let spawnRate = 900;
+        const music = document.getElementById('bgMusic');
+        const container = document.getElementById('game-container');
+        const keys = { 'a': 0, 's': 1, 'd': 2, 'w': 3, 'ArrowLeft': 0, 'ArrowDown': 1, 'ArrowRight': 2, 'ArrowUp': 3 };
+        const keyLabels = ['A', 'S', 'D', 'W'];
+
+        function initGame() {
+            const diff = document.getElementById('diff-select').value;
+            if(diff === 'hard') {
+                speed = 9;
+                spawnRate = 500;
+            } else {
+                speed = 5;
+                spawnRate = 900;
+            }
+
+            document.getElementById('menu').style.display = 'none';
+            document.getElementById('game-ui').style.display = 'block';
+            document.getElementById('game-container').style.display = 'block';
+            
+            // Intentar reproducir música
+            music.play().catch(e => console.log("Error al cargar musica.mp3: ", e));
+            
+            gameActive = true;
+            spawnLoop();
+        }
+
+        function spawnLoop() {
+            if(!gameActive) return;
+            createTile();
+            setTimeout(spawnLoop, spawnRate);
+        }
+
+        function createTile() {
+            const laneIndex = Math.floor(Math.random() * 4);
+            const tile = document.createElement('div');
+            tile.classList.add('tile');
+            tile.innerText = keyLabels[laneIndex];
+            tile.style.left = (laneIndex * 90 + 5) + 'px';
+            tile.style.top = '-80px';
+            tile.dataset.lane = laneIndex;
+            container.appendChild(tile);
+
+            let top = -80;
+            const fall = setInterval(() => {
+                if(!gameActive) return;
+                top += speed;
+                tile.style.top = top + 'px';
+
+                // Si la nota sale de la pantalla (Falla)
+                if (top > 500) {
+                    clearInterval(fall);
+                    if (tile.parentElement) {
+                        tile.style.background = "red";
+                        setTimeout(() => tile.remove(), 100);
+                        score = Math.max(0, score - 2);
+                        updateScore();
+                    }
+                }
+            }, 16);
+        }
+
+        function updateScore() {
+            document.getElementById('scoreVal').innerText = score;
+        }
+
+        function togglePause() {
+            gameActive = !gameActive;
+            if(gameActive) {
+                music.play();
+                spawnLoop();
+                document.getElementById('pauseBtn').innerText = "PAUSAR";
+            } else {
+                music.pause();
+                document.getElementById('pauseBtn').innerText = "REANUDAR";
+            }
+        }
+
+        // Lógica de detección de teclas
+        window.addEventListener('keydown', (e) => {
+            if(!gameActive) return;
+            const laneHit = keys[e.key] !== undefined ? keys[e.key] : keys[e.key.toLowerCase()];
+            
+            if (laneHit !== undefined) {
+                const tiles = document.querySelectorAll('.tile');
+                let hitSuccess = false;
+
+                tiles.forEach(tile => {
+                    const tileTop = parseInt(tile.style.top);
+                    // Rango de acierto: 380px a 480px (Dentro de la zona de meta)
+                    if (tile.dataset.lane == laneHit && tileTop > 380 && tileTop < 480) {
+                        tile.remove();
+                        score += 10;
+                        updateScore();
+                        hitSuccess = true;
+                        // Efecto visual en la columna
+                        container.children[laneHit].style.background = "rgba(0,255,204,0.2)";
+                        setTimeout(() => container.children[laneHit].style.background = "transparent", 100);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
