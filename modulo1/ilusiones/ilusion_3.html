@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Ilusión 3</title>
-  
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
@@ -40,10 +40,10 @@
       box-shadow: 0 10px 20px rgba(0,0,0,0.3);
     }
 
-    /* ESCENA (Área de visualización) */
+    /* ESCENA */
     .scene {
       position: relative;
-      height: 180px; 
+      height: 180px;
       margin: 20px 20px 10px 20px;
       border-radius: 12px;
       background: var(--bg-preview);
@@ -63,16 +63,22 @@
       flex-direction: column;
       justify-content: center;
       padding: 0 40px;
+      gap: 10px;
+    }
+
+    .slider-item {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
     }
 
     .label-container {
       font-size: 13px;
       font-weight: 600;
-      margin-bottom: 12px;
       text-align: center;
     }
 
-    #sizeValue {
+    .size-value {
       color: var(--primary-blue);
       margin-left: 5px;
     }
@@ -84,84 +90,218 @@
       width: 100%;
       height: 12px;
       border-radius: 50px;
-      background: #ddd;
+
+      /* Degradado inicial al 100% */
+      background: linear-gradient(
+        90deg,
+        var(--light-cyan) 0%,
+        var(--primary-blue) 80%,
+        #ddd 80%,
+        #ddd 100%
+      );
+
       outline: none;
     }
 
+    /* THUMB - IGUAL PARA AMBOS */
     input[type=range]::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
       width: 22px;
       height: 22px;
       border-radius: 50%;
-      background: var(--primary-blue);
       cursor: pointer;
       border: 2px solid #fff;
+      background: var(--primary-blue);
       box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
+
+    /* Firefox */
+    input[type=range]::-moz-range-thumb {
+      background: var(--primary-blue);
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid #fff;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
   </style>
 </head>
+
 <body>
 
 <div class="wrapper">
+
   <div class="scene">
     <canvas id="illusionCanvas" width="510" height="180"></canvas>
   </div>
 
   <div class="controls">
-    <div class="label-container">
-      Tamaño relativo: <span id="sizeValue" style="display: none;">0</span>
+
+    <!-- SLIDER CÍRCULO AZUL -->
+    <div class="slider-item">
+
+      <div class="label-container">
+        Tamaño círculo azul:
+        <span class="size-value" id="sizeValueA">100%</span>
+      </div>
+
+      <input
+        type="range"
+        id="sizeSliderA"
+        min="0"
+        max="100"
+        value="100"
+      >
+
     </div>
-    <input type="range" id="sizeSlider" min="-40" max="40" value="0">
+
+    <!-- SLIDER CÍRCULO CYAN -->
+    <div class="slider-item">
+
+      <div class="label-container">
+        Tamaño círculo cyan:
+        <span class="size-value" id="sizeValueB">100%</span>
+      </div>
+
+      <input
+        type="range"
+        id="sizeSliderB"
+        min="0"
+        max="100"
+        value="100"
+      >
+
+    </div>
+
   </div>
 </div>
 
 <script>
+
   const canvas = document.getElementById("illusionCanvas");
   const ctx = canvas.getContext("2d");
-  const sizeSlider = document.getElementById("sizeSlider");
-  const sizeValue = document.getElementById("sizeValue");
+
+  // Sliders independientes
+  const sizeSliderA = document.getElementById("sizeSliderA");
+  const sizeSliderB = document.getElementById("sizeSliderB");
+
+  // Cuantificadores
+  const sizeValueA = document.getElementById("sizeValueA");
+  const sizeValueB = document.getElementById("sizeValueB");
 
   const centerX = canvas.width / 2;
   const centerY = canvas.height / 2;
+
   const baseRadius = 35;
-  const distance = 120; // Distancia fija entre círculos
+  const distance = 120;
+
 
   function draw() {
+
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    const offset = parseInt(sizeSlider.value);
-    sizeValue.textContent = offset === 0 ? "Neutro" : offset > 0 ? "Cercanía" : "Lejanía";
+    // Obtener porcentajes independientes
+    const percentageA = parseInt(sizeSliderA.value);
+    const percentageB = parseInt(sizeSliderB.value);
 
-    // Tamaños relativos
-    const rA = Math.max(5, baseRadius - offset);
-    const rB = Math.max(5, baseRadius + offset);
+    // Actualizar cuantificadores
+    sizeValueA.textContent = percentageA + "%";
+    sizeValueB.textContent = percentageB + "%";
 
-    // Dibujar Círculo Izquierdo (Referencia)
-    ctx.beginPath();
-    ctx.arc(centerX - distance, centerY, rA, 0, Math.PI * 2);
-    ctx.fillStyle = "#162593"; // Azul principal
-    ctx.fill();
-    ctx.closePath();
+    // Calcular radios
+    const rA = baseRadius * (percentageA / 100);
+    const rB = baseRadius * (percentageB / 100);
 
-    // Dibujar Círculo Derecho (Variable)
-    ctx.beginPath();
-    ctx.arc(centerX + distance, centerY, rB, 0, Math.PI * 2);
-    ctx.fillStyle = "#00e2e0"; // Cyan
-    ctx.fill();
-    ctx.closePath();
 
-    // Actualizar el color del slider dinámicamente
-    const min = sizeSlider.min;
-    const max = sizeSlider.max;
-    const percentage = (offset - min) * 100 / (max - min);
-    sizeSlider.style.background = `linear-gradient(90deg, var(--light-cyan) 0%, var(--primary-blue) ${percentage}%, #ddd ${percentage}%)`;
+    // Dibujar círculo azul
+    if (percentageA > 0) {
+
+      ctx.beginPath();
+
+      ctx.arc(
+        centerX - distance,
+        centerY,
+        rA,
+        0,
+        Math.PI * 2
+      );
+
+      ctx.fillStyle = "#162593";
+      ctx.fill();
+
+      ctx.closePath();
+    }
+
+
+    // Dibujar círculo cyan
+    if (percentageB > 0) {
+
+      ctx.beginPath();
+
+      ctx.arc(
+        centerX + distance,
+        centerY,
+        rB,
+        0,
+        Math.PI * 2
+      );
+
+      ctx.fillStyle = "#00e2e0";
+      ctx.fill();
+
+      ctx.closePath();
+    }
+
+
+    // Actualizar visual de ambos sliders
+    updateSliderGradient(sizeSliderA, percentageA);
+    updateSliderGradient(sizeSliderB, percentageB);
+
   }
 
-  sizeSlider.addEventListener("input", draw);
+
+  /*
+    Degradado de ambos sliders:
+
+    0% → todo gris
+    1-80% → cyan → azul según el avance
+    Después del porcentaje → gris
+
+    La transición interna mantiene siempre
+    el mismo degradado cyan → azul.
+  */
+
+  function updateSliderGradient(slider, percentage) {
+
+    if (percentage <= 0) {
+
+      slider.style.background = "#ddd";
+
+      return;
+    }
+
+    slider.style.background = `
+      linear-gradient(
+        90deg,
+        var(--light-cyan) 0%,
+        var(--primary-blue) ${Math.min(percentage, 80)}%,
+        #ddd ${percentage}%,
+        #ddd 100%
+      )
+    `;
+  }
+
+
+  // Eventos independientes
+  sizeSliderA.addEventListener("input", draw);
+  sizeSliderB.addEventListener("input", draw);
 
   // Inicialización
   draw();
+
 </script>
 
 </body>
