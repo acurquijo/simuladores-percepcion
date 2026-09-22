@@ -127,6 +127,16 @@
     #bgG { accent-color: #2ecc71; }
     #bgB { accent-color: #3498db; }
 
+    /* CONTADOR DE VALORES */
+    .slider-value {
+      font-size: 14px;
+      font-weight: 600;
+      width: 35px;
+      text-align: right;
+      color: var(--text-color);
+      font-variant-numeric: tabular-nums;
+    }
+
   </style>
 </head>
 <body>
@@ -143,14 +153,17 @@
       <div class="slider-item">
         <label>Rojo</label>
         <input type="range" id="bgR" min="0" max="255" value="200">
+        <span class="slider-value" id="valueR">200</span>
       </div>
       <div class="slider-item">
         <label>Verde</label>
         <input type="range" id="bgG" min="0" max="255" value="200">
+        <span class="slider-value" id="valueG">200</span>
       </div>
       <div class="slider-item">
         <label>Azul</label>
         <input type="range" id="bgB" min="0" max="255" value="200">
+        <span class="slider-value" id="valueB">200</span>
       </div>
     </div>
   </div>
@@ -162,11 +175,16 @@
   const bgG = document.getElementById("bgG");
   const bgB = document.getElementById("bgB");
 
+  // Contadores de valores
+      const valueR = document.getElementById("valueR");
+      const valueG = document.getElementById("valueG");
+      const valueB = document.getElementById("valueB");
+
   function updateColors() {
     const r = bgR.value;
     const g = bgG.value;
     const b = bgB.value;
-    
+
     // Actualiza el fondo de la escena
     bgArea.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
 
@@ -174,6 +192,11 @@
     updateSliderGradient(bgR, r, '#ff4d4d');
     updateSliderGradient(bgG, g, '#2ecc71');
     updateSliderGradient(bgB, b, '#3498db');
+
+    // Actualiza los contadores numéricos
+    valueR.textContent = r;
+    valueG.textContent = g;
+    valueB.textContent = b;
   }
 
   function updateSliderGradient(el, val, color) {
